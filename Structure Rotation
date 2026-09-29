@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Medieval Kingdom - Start Game</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+        user-select: none;
+    }
+
+    html, body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #111;
+        font-family: Georgia, "Times New Roman", serif;
+    }
+
+    /* =========================================================
+       GAME WORLD
+       ========================================================= */
+
+    #game {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        background: #111;
+    }
+
+    #world {
+        position: absolute;
+        width: 160%;
+        height: 160%;
+        left: -30%;
+        top: -30%;
+
+        background-image: url("start-game.png");
+        background-size: 100% 100%;
+        background-repeat: no-repeat;
+        background-position: center center;
+
+        transform-origin: center center;
+
+        transition:
+            transform 0.08s linear;
+    }
+
+    /* =========================================================
+       BANNER
+       ========================================================= */
+
+    #chosenBanner {
+        position: absolute;
+        top: 22px;
+        right: 24px;
+
+        width: 105px;
+        height: 145px;
+
+        object-fit: contain;
+
+        z-index: 50;
+
+        filter:
+            drop-shadow(0 4px 4px rgba(0,0,0,.65))
+            drop-shadow(0 0 2px rgba(0,0,0,.9));
+    }
+
+    /* =========================================================
+       TOP HUD
+       ========================================================= */
+
+    #topHud {
+        position: absolute;
+        top: 18px;
+        left: 20px;
+
+        z-index: 40;
+
+        color: #eee;
+
+        background:
+            linear-gradient(
+                rgba(20,20,20,.88),
+                rgba(20,20,20,.68)
+            );
+
+        border: 1px solid rgba(190,160,90,.7);
+
+        padding: 9px 15px;
+
+        border-radius: 4px;
+
+        box-shadow:
+            0 3px 12px rgba(0,0,0,.6);
+
+        font-size: 15px;
+
+        pointer-events: none;
+    }
+
+    #kingdomName {
+        font-size: 18px;
+        font-weight: bold;
+        color: #e8d39b;
+        letter-spacing: 1px;
+    }
+
+    #season {
+        margin-top: 3px;
+        opacity: .9;
+    }
+
+    /* =========================================================
+       BOTTOM INFORMATION BAR
+       ========================================================= */
+
+    #bottomHud {
+        position: absolute;
+        bottom: 18px;
+        left: 50%;
+        transform: translateX(-50%);
+
+        z-index: 40;
+
+        display: flex;
+        gap: 18px;
+
+        padding: 10px 18px;
+
+        background: rgba(15,15,15,.84);
+
+        border: 1px solid rgba(190,160,90,.65);
+
+        color: white;
+
+        border-radius: 5px;
+
+        box-shadow: 0 4px 15px rgba(0,0,0,.55);
+
+        font-size: 14px;
+
+        pointer-events: none;
+    }
+
+    .resource {
+        white-space: nowrap;
+    }
+
+    .resource span {
+        color: #dfc98c;
+        font-weight: bold;
+    }
+
+    /* =========================================================
+       CONTROLS
+       ========================================================= */
+
+    #controls {
+        position: absolute;
+        bottom: 18px;
+        left: 18px;
+
+        z-index: 45;
+
+        background: rgba(15,15,15,.78);
+
+        border: 1px solid rgba(190,160,90,.55);
+
+        padding: 11px 14px;
+
+        color: #eee;
+
+        border-radius: 4px;
+
+        font-size: 12px;
+
+        line-height: 1.65;
+
+        box-shadow: 0 3px 12px rgba(0,0,0,.45);
+    }
+
+    #controls strong {
+        color: #dfc98c;
+    }
+
+    /* =========================================================
+       MAP
+       ========================================================= */
+
+    #mapOverlay {
+        display: none;
+
+        position: absolute;
+        inset: 0;
+
+        z-index: 100;
+
+        background: rgba(0,0,0,.78);
+
+        align-items: center;
+        justify-content: center;
+    }
+
+    #mapWindow {
+        position: relative;
+
+        width: min(850px, 85vw);
+        height: min(650px, 80vh);
+
+        background: #222;
+
+        border: 3px solid #b49a61;
+
+        box-shadow:
+            0 0 35px rgba(0,0,0,.9);
+
+        overflow: hidden;
+    }
+
+    #mapTitle {
+        position: absolute;
+
+        top: 12px;
+        left: 18px;
+
+        z-index: 5;
+
+        color: #ead59b;
+
+        font-size: 23px;
+
+        text-shadow: 0 2px 3px black;
+    }
+
+    #mapImage {
+        width: 100%;
+        height: 100%;
+
+        object-fit: cover;
+
+        opacity: .9;
+    }
+
+    #closeMap {
+        position: absolute;
+
+        top: 10px;
+        right: 12px;
+
+        z-index: 10;
+
+        width: 35px;
+        height: 35px;
+
+        background: rgba(20,20,20,.9);
+
+        border: 1px solid #b49a61;
+
+        color: #eee;
+
+        font-size: 20px;
+
+        cursor: pointer;
+    }
+
+    #closeMap:hover {
+        background: #51442b;
+    }
+
+    /* =========================================================
+       STRUCTURE ROTATION INDICATOR
+       ========================================================= */
+
+    #rotationIndicator {
+        position: absolute;
+
+        left: 50%;
+        top: 50%;
+
+        transform: translate(-50%, -50%);
+
+        z-index: 35;
+
+        display: none;
+
+        padding: 7px 12px;
+
+        background: rgba(0,0,0,.7);
+
+        border: 1px solid rgba(220,190,110,.7);
+
+        color: #e8d39b;
+
+        font-size: 13px;
+
+        pointer-events: none;
+    }
+
+    /* =========================================================
+       VIGNETTE
+       ========================================================= */
+
+    #vignette {
+        position: absolute;
+        inset: 0;
+
+        z-index: 30;
+
+        pointer-events: none;
+
+        background:
+            radial-gradient(
+                ellipse at center,
+                transparent 45%,
+                rgba(0,0,0,.12) 72%,
+                rgba(0,0,0,.4) 100%
+            );
+    }
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+    <!-- ORIGINAL STARTING GAME IMAGE -->
+    <div id="world"></div>
+
+    <!-- TOP INFORMATION -->
+    <div id="topHud">
+        <div id="kingdomName">YOUR KINGDOM</div>
+        <div id="season">Early Spring — Year 1</div>
+    </div>
+
+    <!-- CHOSEN BANNER FROM THE BANNER MENU -->
+    <img id="chosenBanner"
+         src=""
+         alt="Chosen Kingdom Banner">
+
+    <!-- STRUCTURE ROTATION MESSAGE -->
+    <div id="rotationIndicator">
+        Structure Rotation: <span id="rotationValue">0°</span>
+    </div>
+
+    <!-- BOTTOM RESOURCE HUD -->
+    <div id="bottomHud">
+
+        <div class="resource">
+            Food: <span id="food">1000</span>
+        </div>
+
+        <div class="resource">
+            Wood: <span id="wood">1000</span>
+        </div>
+
+        <div class="resource">
+            Stone: <span id="stone">500</span>
+        </div>
+
+        <div class="resource">
+            Gold: <span id="gold">500</span>
+        </div>
+
+        <div class="resource">
+            Population: <span id="population">250</span>
+        </div>
+
+    </div>
+
+    <!-- CONTROLS -->
+    <div id="controls">
+        <strong>W</strong> Forward<br>
+        <strong>A</strong> Left<br>
+        <strong>D</strong> Right<br>
+        <strong>C</strong> Back<br>
+        <strong>Q / E</strong> Rotate Camera<br>
+        <strong>R</strong> Rotate Structure<br>
+        <strong>M</strong> Map
+    </div>
+
+    <!-- VIGNETTE -->
+    <div id="vignette"></div>
+
+    <!-- MAP -->
+    <div id="mapOverlay">
+
+        <div id="mapWindow">
+
+            <div id="mapTitle">
+                Kingdom Map
+            </div>
+
+            <button id="closeMap">×</button>
+
+            <img id="mapImage"
+                 src="map.png"
+                 alt="Kingdom Map">
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+/* ============================================================
+   GAME STATE
+   ============================================================ */
+
+const world = document.getElementById("world");
+const chosenBanner = document.getElementById("chosenBanner");
+
+let cameraX = 0;
+let cameraY = 0;
+
+let cameraRotation = 0;
+
+let structureRotation = 0;
+
+const movementSpeed = 14;
+const rotationSpeed = 3;
+
+const keys = {};
+
+/* ============================================================
+   LOAD THE BANNER CHOSEN IN THE BANNER MENU
+   ============================================================ */
+
+/*
+    The banner menu should save the selected banner using:
+
+    localStorage.setItem(
+        "chosenBanner",
+        "banner1.png"
+    );
+
+    This game page reads that value.
+
+    The banner menu itself is NOT included here.
+*/
+
+const savedBanner = localStorage.getItem("chosenBanner");
+
+/*
+    If a banner was selected, use it.
+*/
+if (savedBanner) {
+
+    chosenBanner.src = savedBanner;
+
+} else {
+
+    /*
+        Fallback if no banner has been selected yet.
+        Change this only if your default banner has another filename.
+    */
+
+    chosenBanner.src = "banner1.png";
+}
+
+
+/* ============================================================
+   KEYBOARD INPUT
+   ============================================================ */
+
+document.addEventListener("keydown", function(event) {
+
+    const key = event.key.toLowerCase();
+
+    keys[key] = true;
+
+    /*
+        Prevent browser scrolling for movement keys.
+    */
+
+    if (
+        key === "w" ||
+        key === "a" ||
+        key === "s" ||
+        key === "d" ||
+        key === "c" ||
+        key === "q" ||
+        key === "e" ||
+        key === "r" ||
+        key === "m"
+    ) {
+        event.preventDefault();
+    }
+
+    /*
+        M = Map
+    */
+
+    if (key === "m" && !event.repeat) {
+        toggleMap();
+    }
+
+    /*
+        R = Rotate structure
+    */
+
+    if (key === "r" && !event.repeat) {
+        rotateStructure();
+    }
+
+});
+
+
+document.addEventListener("keyup", function(event) {
+
+    const key = event.key.toLowerCase();
+
+    keys[key] = false;
+
+});
+
+
+/* ============================================================
+   CAMERA / PLAYER MOVEMENT
+   ============================================================ */
+
+function updateMovement() {
+
+    /*
+        W = forward
+        A = left
+        D = right
+        C = backward
+
+        S is intentionally not used for backward movement.
+    */
+
+    if (keys["w"]) {
+        cameraY += movementSpeed;
+    }
+
+    if (keys["c"]) {
+        cameraY -= movementSpeed;
+    }
+
+    if (keys["a"]) {
+        cameraX += movementSpeed;
+    }
+
+    if (keys["d"]) {
+        cameraX -= movementSpeed;
+    }
+
+
+    /*
+        Q = rotate camera left
+        E = rotate camera right
+    */
+
+    if (keys["q"]) {
+        cameraRotation -= rotationSpeed;
+    }
+
+    if (keys["e"]) {
+        cameraRotation += rotationSpeed;
+    }
+
+
+    applyCamera();
+
+    requestAnimationFrame(updateMovement);
+}
+
+
+/* ============================================================
+   APPLY CAMERA
+   ============================================================ */
+
+function applyCamera() {
+
+    world.style.transform =
+        "translate(" +
+        cameraX +
+        "px, " +
+        cameraY +
+        "px) " +
+        "rotate(" +
+        cameraRotation +
+        "deg)";
+
+}
+
+
+/* ============================================================
+   STRUCTURE ROTATION
+   ============================================================ */
+
+function rotateStructure() {
+
+    structureRotation += 15;
+
+    if (structureRotation >= 360) {
+        structureRotation = 0;
+    }
+
+    document.getElementById("rotationValue").textContent =
+        structureRotation + "°";
+
+
+    /*
+        Show the rotation indicator briefly.
+    */
+
+    const indicator =
+        document.getElementById("rotationIndicator");
+
+    indicator.style.display = "block";
+
+    clearTimeout(window.rotationTimer);
+
+    window.rotationTimer = setTimeout(function() {
+
+        indicator.style.display = "none";
+
+    }, 900);
+
+}
+
+
+/* ============================================================
+   MAP
+   ============================================================ */
+
+const mapOverlay =
+    document.getElementById("mapOverlay");
+
+const closeMap =
+    document.getElementById("closeMap");
+
+
+function toggleMap() {
+
+    if (mapOverlay.style.display === "flex") {
+
+        mapOverlay.style.display = "none";
+
+    } else {
+
+        mapOverlay.style.display = "flex";
+
+    }
+
+}
+
+
+closeMap.addEventListener("click", function() {
+
+    mapOverlay.style.display = "none";
+
+});
+
+
+/*
+    Clicking outside the map closes it.
+*/
+
+mapOverlay.addEventListener("click", function(event) {
+
+    if (event.target === mapOverlay) {
+
+        mapOverlay.style.display = "none";
+
+    }
+
+});
+
+
+/* ============================================================
+   START GAME
+   ============================================================ */
+
+applyCamera();
+
+updateMovement();
+
+</script>
+
+</body>
+</html>
