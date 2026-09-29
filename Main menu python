@@ -1,0 +1,336 @@
+import pygame
+import sys
+
+pygame.init()
+
+# --------------------------------------------------
+# WINDOW
+# --------------------------------------------------
+
+WIDTH = 1600
+HEIGHT = 900
+
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Kingdoms of the Medieval Age")
+
+clock = pygame.time.Clock()
+
+# --------------------------------------------------
+# FONTS
+# --------------------------------------------------
+
+title_font = pygame.font.Font(None, 110)
+button_font = pygame.font.Font(None, 48)
+small_font = pygame.font.Font(None, 30)
+
+# --------------------------------------------------
+# BUTTON
+# --------------------------------------------------
+
+class MenuButton:
+
+    def __init__(self, text, x, y, width, height):
+
+        self.text = text
+        self.rect = pygame.Rect(
+            x,
+            y,
+            width,
+            height
+        )
+
+        self.hovered = False
+
+    def update(self, mouse_position):
+
+        self.hovered = self.rect.collidepoint(
+            mouse_position
+        )
+
+    def draw(self, surface):
+
+        if self.hovered:
+            background = (105, 78, 43)
+        else:
+            background = (65, 48, 30)
+
+        pygame.draw.rect(
+            surface,
+            background,
+            self.rect
+        )
+
+        pygame.draw.rect(
+            surface,
+            (180, 150, 90),
+            self.rect,
+            3
+        )
+
+        text_surface = button_font.render(
+            self.text,
+            True,
+            (235, 220, 180)
+        )
+
+        text_rect = text_surface.get_rect(
+            center=self.rect.center
+        )
+
+        surface.blit(
+            text_surface,
+            text_rect
+        )
+
+    def clicked(self, event):
+
+        return (
+            event.type == pygame.MOUSEBUTTONDOWN
+            and event.button == 1
+            and self.rect.collidepoint(event.pos)
+        )
+
+
+# --------------------------------------------------
+# BUTTONS
+# --------------------------------------------------
+
+button_width = 430
+button_height = 70
+
+button_x = (WIDTH - button_width) // 2
+
+new_game = MenuButton(
+    "NEW GAME",
+    button_x,
+    330,
+    button_width,
+    button_height
+)
+
+load_game = MenuButton(
+    "LOAD GAME",
+    button_x,
+    420,
+    button_width,
+    button_height
+)
+
+settings = MenuButton(
+    "SETTINGS",
+    button_x,
+    510,
+    button_width,
+    button_height
+)
+
+quit_game = MenuButton(
+    "QUIT",
+    button_x,
+    600,
+    button_width,
+    button_height
+)
+
+buttons = [
+    new_game,
+    load_game,
+    settings,
+    quit_game
+]
+
+
+# --------------------------------------------------
+# BACKGROUND
+# --------------------------------------------------
+
+def draw_background():
+
+    # Sky
+
+    screen.fill((20, 25, 30))
+
+    # Distant mountains
+
+    pygame.draw.polygon(
+        screen,
+        (32, 35, 38),
+        [
+            (0, 620),
+            (200, 420),
+            (400, 600),
+            (650, 350),
+            (900, 610),
+            (1200, 400),
+            (1600, 620)
+        ]
+    )
+
+    # Ground
+
+    pygame.draw.rect(
+        screen,
+        (30, 35, 25),
+        (0, 620, WIDTH, 280)
+    )
+
+    # Castle silhouette
+
+    castle_x = WIDTH // 2
+    castle_y = 520
+
+    pygame.draw.rect(
+        screen,
+        (42, 40, 37),
+        (
+            castle_x - 170,
+            castle_y,
+            340,
+            130
+        )
+    )
+
+    # Towers
+
+    pygame.draw.rect(
+        screen,
+        (38, 37, 35),
+        (
+            castle_x - 220,
+            castle_y - 80,
+            75,
+            210
+        )
+    )
+
+    pygame.draw.rect(
+        screen,
+        (38, 37, 35),
+        (
+            castle_x + 145,
+            castle_y - 80,
+            75,
+            210
+        )
+    )
+
+    # Central tower
+
+    pygame.draw.rect(
+        screen,
+        (45, 43, 40),
+        (
+            castle_x - 55,
+            castle_y - 150,
+            110,
+            280
+        )
+    )
+
+
+# --------------------------------------------------
+# TITLE
+# --------------------------------------------------
+
+def draw_title():
+
+    title = title_font.render(
+        "KINGDOMS",
+        True,
+        (220, 190, 120)
+    )
+
+    subtitle = title_font.render(
+        "OF THE MEDIEVAL AGE",
+        True,
+        (190, 170, 130)
+    )
+
+    title_rect = title.get_rect(
+        center=(WIDTH // 2, 115)
+    )
+
+    subtitle_rect = subtitle.get_rect(
+        center=(WIDTH // 2, 205)
+    )
+
+    screen.blit(
+        title,
+        title_rect
+    )
+
+    screen.blit(
+        subtitle,
+        subtitle_rect
+    )
+
+
+# --------------------------------------------------
+# MAIN MENU
+# --------------------------------------------------
+
+running = True
+
+while running:
+
+    mouse_position = pygame.mouse.get_pos()
+
+    for event in pygame.event.get():
+
+        if event.type == pygame.QUIT:
+
+            running = False
+
+        if new_game.clicked(event):
+
+            print("Starting New Game...")
+
+            # Later:
+            # Open map selection
+
+        if load_game.clicked(event):
+
+            print("Loading Game...")
+
+        if settings.clicked(event):
+
+            print("Opening Settings...")
+
+        if quit_game.clicked(event):
+
+            running = False
+
+    # Update buttons
+
+    for button in buttons:
+
+        button.update(mouse_position)
+
+    # Draw
+
+    draw_background()
+
+    draw_title()
+
+    for button in buttons:
+
+        button.draw(screen)
+
+    version = small_font.render(
+        "Medieval Strategy Prototype",
+        True,
+        (150, 145, 130)
+    )
+
+    screen.blit(
+        version,
+        (25, HEIGHT - 45)
+    )
+
+    pygame.display.flip()
+
+    clock.tick(60)
+
+
+pygame.quit()
+sys.exit()
