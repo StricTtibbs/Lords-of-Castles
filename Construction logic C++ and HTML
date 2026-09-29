@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Medieval Settlement — Construction</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #111;
+    font-family: Georgia, serif;
+    color: white;
+}
+
+#world {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background:
+        linear-gradient(rgba(80,100,65,.18), rgba(30,45,25,.45)),
+        url("start-game.png") center/cover;
+}
+
+#banner {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    width: 90px;
+    height: 120px;
+    object-fit: contain;
+    z-index: 20;
+    filter: drop-shadow(0 5px 5px #000);
+}
+
+#hud {
+    position: absolute;
+    top: 18px;
+    left: 18px;
+    background: rgba(20,20,15,.86);
+    border: 2px solid #806b43;
+    padding: 14px;
+    min-width: 240px;
+    z-index: 20;
+    box-shadow: 0 8px 25px #0008;
+}
+
+#hud h2 {
+    margin: 0 0 10px;
+    font-size: 20px;
+}
+
+.resource {
+    display: flex;
+    justify-content: space-between;
+    margin: 4px 0;
+}
+
+#buildMenu {
+    position: absolute;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    padding: 10px;
+    background: rgba(20,20,15,.9);
+    border: 2px solid #806b43;
+    z-index: 30;
+}
+
+.buildButton {
+    width: 105px;
+    height: 62px;
+    background: linear-gradient(#66583e,#342e23);
+    color: white;
+    border: 1px solid #aa9361;
+    cursor: pointer;
+    font-family: Georgia, serif;
+}
+
+.buildButton:hover {
+    background: linear-gradient(#8b774e,#493e2c);
+}
+
+#message {
+    position: absolute;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,.75);
+    padding: 10px 20px;
+    border: 1px solid #927a4b;
+    z-index: 40;
+}
+
+#constructionInfo {
+    position: absolute;
+    right: 18px;
+    bottom: 18px;
+    width: 270px;
+    background: rgba(20,20,15,.9);
+    padding: 15px;
+    border: 2px solid #806b43;
+    z-index: 20;
+}
+
+.progressOuter {
+    width: 100%;
+    height: 14px;
+    background: #211e19;
+    border: 1px solid #89734b;
+    margin-top: 8px;
+}
+
+.progressInner {
+    height: 100%;
+    width: 0%;
+    background: #b39258;
+}
+
+/* PEOPLE */
+
+.person {
+    position: absolute;
+    width: 30px;
+    height: 70px;
+    transform-origin: center bottom;
+    z-index: 12;
+    pointer-events: none;
+}
+
+.person .head {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    left: 8px;
+    top: 0;
+    background: #b9825d;
+    border-radius: 50%;
+}
+
+.person .body {
+    position: absolute;
+    left: 7px;
+    top: 13px;
+    width: 16px;
+    height: 25px;
+    background: #75604b;
+    border-radius: 3px 3px 2px 2px;
+}
+
+.person .arm {
+    position: absolute;
+    width: 6px;
+    height: 24px;
+    top: 14px;
+    background: #9a7055;
+    border-radius: 4px;
+}
+
+.person .leftArm {
+    left: 2px;
+    transform: rotate(12deg);
+}
+
+.person .rightArm {
+    right: 2px;
+    transform: rotate(-12deg);
+}
+
+.person .leg {
+    position: absolute;
+    width: 7px;
+    height: 28px;
+    top: 37px;
+    background: #493f36;
+    border-radius: 3px;
+}
+
+.person .leftLeg {
+    left: 7px;
+}
+
+.person .rightLeg {
+    right: 7px;
+}
+
+.person .load {
+    display: none;
+    position: absolute;
+    width: 15px;
+    height: 11px;
+    left: 7px;
+    top: 25px;
+    background: #765631;
+    border: 1px solid #c39a5b;
+}
+
+.person.carrying .load {
+    display: block;
+}
+
+/* CONSTRUCTION */
+
+.buildingGhost {
+    position: absolute;
+    width: 180px;
+    height: 130px;
+    transform: translate(-50%,-50%);
+    border: 3px dashed #b99a61;
+    background: rgba(120,100,65,.18);
+    z-index: 8;
+}
+
+.building {
+    position: absolute;
+    transform: translate(-50%,-50%);
+    width: 180px;
+    height: 130px;
+    z-index: 9;
+}
+
+.foundation {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    width: 160px;
+    height: 28px;
+    background: #77705e;
+    border: 2px solid #4d493e;
+}
+
+.wall {
+    position: absolute;
+    left: 25px;
+    bottom: 35px;
+    width: 130px;
+    height: 65px;
+    background: #a28a65;
+    border: 2px solid #594c38;
+}
+
+.roof {
+    position: absolute;
+    left: 12px;
+    top: 10px;
+    width: 155px;
+    height: 45px;
+    background: #563f2d;
+    clip-path: polygon(50% 0,100% 100%,0 100%);
+}
+
+.door {
+    position: absolute;
+    bottom: 35px;
+    left: 80px;
+    width: 20px;
+    height: 35px;
+    background: #493423;
+}
+
+.constructionLayer {
+    opacity: .25;
+    transition: opacity .3s;
+}
+
+/* MAP */
+
+#map {
+    display: none;
+    position: absolute;
+    inset: 8%;
+    background: rgba(38,48,31,.97);
+    border: 4px solid #806b43;
+    z-index: 100;
+    padding: 25px;
+}
+
+#map h1 {
+    margin-top: 0;
+}
+
+.mapRoad {
+    position: absolute;
+    height: 8px;
+    background: #756044;
+    transform-origin: left;
+}
+
+.mapVillage {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #b69a60;
+}
+</style>
+</head>
+
+<body>
+
+<div id="world">
+
+<img id="banner" src="" alt="Chosen Banner">
+
+<div id="hud">
+    <h2>Settlement</h2>
+
+    <div class="resource">
+        <span>Logs</span>
+        <span id="logs">10</span>
+    </div>
+
+    <div class="resource">
+        <span>Stone</span>
+        <span id="stone">20</span>
+    </div>
+
+    <div class="resource">
+        <span>Food</span>
+        <span id="food">50</span>
+    </div>
+
+    <div class="resource">
+        <span>Workers</span>
+        <span id="workers">20</span>
+    </div>
+
+    <div class="resource">
+        <span>Builders</span>
+        <span id="builders">0</span>
+    </div>
+</div>
+
+<div id="constructionInfo">
+    <b id="constructionTitle">No construction</b>
+
+    <div id="constructionText">
+        Select a building and place it.
+    </div>
+
+    <div class="progressOuter">
+        <div class="progressInner" id="progress"></div>
+    </div>
+</div>
+
+<div id="message">Select a building to begin construction.</div>
+
+<div id="buildMenu">
+    <button class="buildButton" onclick="selectBuilding('House',5,3,10)">
+        HOUSE<br>
+        5 Logs / 3 Stone
+    </button>
+
+    <button class="buildButton" onclick="selectBuilding('Storehouse',10,8,20)">
+        STOREHOUSE<br>
+        10 Logs / 8 Stone
+    </button>
+
+    <button class="buildButton" onclick="selectBuilding('Blacksmith',15,12,30)">
+        BLACKSMITH<br>
+        15 Logs / 12 Stone
+    </button>
+
+    <button class="buildButton" onclick="selectBuilding('Barracks',20,15,40)">
+        BARRACKS<br>
+        20 Logs / 15 Stone
+    </button>
+</div>
+
+<div id="map">
+    <h1>Settlement Map</h1>
+    <p>Press M to return to the settlement.</p>
+
+    <div class="mapRoad"
+         style="left:15%;top:50%;width:70%;transform:rotate(8deg);"></div>
+
+    <div class="mapVillage" style="left:25%;top:40%;"></div>
+    <div class="mapVillage" style="left:52%;top:55%;"></div>
+    <div class="mapVillage" style="left:70%;top:35%;"></div>
+</div>
+
+</div>
+
+<script>
+
+const banner = document.getElementById("banner");
+const chosenBanner = localStorage.getItem("chosenBanner");
+
+if (chosenBanner) {
+    banner.src = chosenBanner;
+}
+
+/* RESOURCES */
+
+let resources = {
+    logs: 10,
+    stone: 20,
+    food: 50
+};
+
+let families = [
+    "Alden",
+    "Beran",
+    "Corwin",
+    "Doran",
+    "Eryn"
+];
+
+let people = [];
+
+let construction = null;
+let selectedBuilding = null;
+let cameraX = 0;
+let cameraY = 0;
+let cameraRotation = 0;
+let structureRotation = 0;
+
+const world = document.getElementById("world");
+
+function updateHUD() {
+
+    document.getElementById("logs").textContent = resources.logs;
+    document.getElementById("stone").textContent = resources.stone;
+
+    document.getElementById("workers").textContent =
+        people.length;
+
+    document.getElementById("builders").textContent =
+        people.filter(p => p.job === "builder").length;
+}
+
+/* CREATE PEOPLE */
+
+families.forEach((family, familyIndex) => {
+
+    for (let i = 0; i < 4; i++) {
+
+        const el = document.createElement("div");
+
+        el.className = "person";
+
+        el.innerHTML = `
+            <div class="head"></div>
+            <div class="body"></div>
+            <div class="arm leftArm"></div>
+            <div class="arm rightArm"></div>
+            <div class="leg leftLeg"></div>
+            <div class="leg rightLeg"></div>
+            <div class="load"></div>
+        `;
+
+        world.appendChild(el);
+
+        const person = {
+            family,
+            element: el,
+            x: 300 + familyIndex * 80,
+            y: 400 + (i % 2) * 70,
+            job: "villager",
+            speed: 1.2,
+            target: null,
+            carrying: false,
+            resource: null,
+            state: "idle"
+        };
+
+        people.push(person);
+    }
+});
+
+updateHUD();
+
+/* BUILDING SELECTION */
+
+function selectBuilding(name, logs, stone, buildTime) {
+
+    if (resources.logs < logs || resources.stone < stone) {
+
+        showMessage(
+            "Not enough resources to construct " + name
+        );
+
+        return;
+    }
+
+    selectedBuilding = {
+        name,
+        logs,
+        stone,
+        buildTime
+    };
+
+    showMessage(
+        name + " selected. Click the ground to place it."
+    );
+}
+
+/* PLACE BUILDING */
+
+world.addEventListener("click", function(e) {
+
+    if (!selectedBuilding) return;
+
+    if (e.target.closest("#buildMenu") ||
+        e.target.closest("#hud") ||
+        e.target.closest("#constructionInfo")) {
+        return;
+    }
+
+    if (construction) {
+        showMessage("Another building is already under construction.");
+        return;
+    }
+
+    const rect = world.getBoundingClientRect();
+
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    construction = {
+
+        name: selectedBuilding.name,
+
+        x,
+        y,
+
+        requiredLogs: selectedBuilding.logs,
+        requiredStone: selectedBuilding.stone,
+
+        deliveredLogs: 0,
+        deliveredStone: 0,
+
+        progress: 0,
+
+        phase: "foundation",
+
+        element: null
+    };
+
+    resources.logs -= selectedBuilding.logs;
+    resources.stone -= selectedBuilding.stone;
+
+    createConstruction();
+
+    assignBuilders();
+
+    selectedBuilding = null;
+
+    updateHUD();
+});
+
+/* BUILDING APPEARS FROM SCRATCH */
+
+function createConstruction() {
+
+    const c = document.createElement("div");
+
+    c.className = "building";
+
+    c.style.left = construction.x + "px";
+    c.style.top = construction.y + "px";
+
+    c.innerHTML = `
+
+        <div class="foundation constructionLayer"
+             id="foundationLayer"></div>
+
+        <div class="wall constructionLayer"
+             id="wallLayer"></div>
+
+        <div class="roof constructionLayer"
+             id="roofLayer"></div>
+
+        <div class="door constructionLayer"
+             id="doorLayer"></div>
+    `;
+
+    world.appendChild(c);
+
+    construction.element = c;
+
+    updateConstructionVisual();
+}
+
+/* CHOOSE BUILDERS */
+
+function assignBuilders() {
+
+    const available = people
+        .filter(p => p.job === "villager")
+        .slice(0, Math.min(4, people.length));
+
+    available.forEach((person, index) => {
+
+        person.job = "builder";
+        person.state = "walkingToResource";
+
+        person.target = {
+            x: 180,
+            y: 500
+        };
+
+        person.resource =
+            index % 2 === 0 ? "logs" : "stone";
+
+        person.carrying = false;
+    });
+
+    updateHUD();
+
+    showMessage(
+        "Builders have been assigned. They are collecting resources."
+    );
+}
+
+/* MOVEMENT AI */
+
+function movePerson(person) {
+
+    if (!person.target) return;
+
+    const dx = person.target.x - person.x;
+    const dy = person.target.y - person.y;
+
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance < 5) {
+
+        reachedTarget(person);
+
+        return;
+    }
+
+    person.x += dx / distance * person.speed;
+    person.y += dy / distance * person.speed;
+
+    person.element.style.left = person.x + "px";
+    person.element.style.top = person.y + "px";
+
+    person.element.style.transform =
+        `translate(-50%,-50%) rotate(${Math.atan2(dy,dx)*180/Math.PI+90}deg)`;
+}
+
+/* RESOURCE COLLECTION */
+
+function reachedTarget(person) {
+
+    if (person.state === "walkingToResource") {
+
+        person.carrying = true;
+        person.state = "walkingToBuilding";
+
+        person.target = {
+            x: construction.x,
+            y: construction.y
+        };
+
+        person.element.classList.add("carrying");
+
+        showMessage(
+            person.family +
+            " family worker is carrying " +
+            person.resource +
+            " to the construction site."
+        );
+
+        return;
+    }
+
+    if (person.state === "walkingToBuilding") {
+
+        person.carrying = false;
+
+        person.element.classList.remove("carrying");
+
+        if (person.resource === "logs") {
+            construction.deliveredLogs++;
+        } else {
+            construction.deliveredStone++;
+        }
+
+        person.state = "building";
+
+        updateConstructionVisual();
+
+        /* Send worker back for another load */
+
+        setTimeout(() => {
+
+            if (!construction) return;
+
+            person.state = "walkingToResource";
+
+            person.target = {
+                x: 180,
+                y: 500
+            };
+
+            person.resource =
+                Math.random() > .5 ? "logs" : "stone";
+
+        }, 500);
+
+        return;
+    }
+}
+
+/* BUILDING PROGRESS */
+
+function updateConstructionVisual() {
+
+    if (!construction) return;
+
+    const logPercent =
+        construction.deliveredLogs /
+        construction.requiredLogs;
+
+    const stonePercent =
+        construction.deliveredStone /
+        construction.requiredStone;
+
+    const total =
+        Math.min(1, (logPercent + stonePercent) / 2);
+
+    construction.progress = total;
+
+    document.getElementById("constructionTitle")
+        .textContent = construction.name;
+
+    document.getElementById("constructionText")
+        .textContent =
+        "Logs: " +
+        construction.deliveredLogs +
+        "/" +
+        construction.requiredLogs +
+        " | Stone: " +
+        construction.deliveredStone +
+        "/" +
+        construction.requiredStone;
+
+    document.getElementById("progress").style.width =
+        (total * 100) + "%";
+
+    const foundation =
+        document.getElementById("foundationLayer");
+
+    const walls =
+        document.getElementById("wallLayer");
+
+    const roof =
+        document.getElementById("roofLayer");
+
+    const door =
+        document.getElementById("doorLayer");
+
+    foundation.style.opacity =
+        total >= .05 ? 1 : .2;
+
+    walls.style.opacity =
+        total >= .35 ? 1 : total * 2;
+
+    roof.style.opacity =
+        total >= .75 ? 1 : 0;
+
+    door.style.opacity =
+        total >= .9 ? 1 : 0;
+
+    if (total >= 1) {
+
+        finishConstruction();
+    }
+}
+
+/* FINISH */
+
+function finishConstruction() {
+
+    if (!construction) return;
+
+    showMessage(
+        construction.name +
+        " has been completed."
+    );
+
+    people.forEach(person => {
+
+        if (person.job === "builder") {
+
+            person.job = "villager";
+            person.state = "idle";
+            person.target = null;
+            person.carrying = false;
+
+            person.element.classList.remove("carrying");
+        }
+    });
+
+    construction = null;
+
+    document.getElementById("constructionTitle")
+        .textContent = "No construction";
+
+    document.getElementById("constructionText")
+        .textContent = "Building completed.";
+
+    updateHUD();
+}
+
+/* GAME LOOP */
+
+function gameLoop() {
+
+    people.forEach(person => {
+
+        if (person.job === "builder") {
+            movePerson(person);
+        }
+
+        if (person.state === "building" &&
+            construction) {
+
+            construction.progress +=
+                0.00012;
+
+            updateConstructionVisual();
+        }
+    });
+
+    requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+
+/* MESSAGE */
+
+let messageTimeout;
+
+function showMessage(text) {
+
+    const message =
+        document.getElementById("message");
+
+    message.textContent = text;
+
+    clearTimeout(messageTimeout);
+
+    messageTimeout = setTimeout(() => {
+
+        message.textContent =
+            "Settlement construction underway.";
+
+    }, 2500);
+}
+
+/* CAMERA */
+
+document.addEventListener("keydown", e => {
+
+    const key = e.key.toLowerCase();
+
+    if (key === "w") cameraY -= 20;
+    if (key === "c") cameraY += 20;
+    if (key === "a") cameraX -= 20;
+    if (key === "d") cameraX += 20;
+
+    if (key === "q") cameraRotation -= 5;
+    if (key === "e") cameraRotation += 5;
+
+    if (key === "r") {
+
+        structureRotation += 15;
+
+        if (construction &&
+            construction.element) {
+
+            construction.element.style.transform =
+                `translate(-50%,-50%) rotate(${structureRotation}deg)`;
+        }
+    }
+
+    if (key === "m") {
+
+        const map =
+            document.getElementById("map");
+
+        map.style.display =
+            map.style.display === "block"
+                ? "none"
+                : "block";
+    }
+
+    world.style.backgroundPosition =
+        `${50 + cameraX / 20}% ${50 + cameraY / 20}%`;
+
+    world.style.transform =
+        `rotate(${cameraRotation * 0.02}deg)`;
+
+});
+
+</script>
+
+</body>
+</html>
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "ConstructionSite.generated.h"
+
+UENUM(BlueprintType)
+enum class EConstructionPhase : uint8
+{
+    Planning,
+    Foundation,
+    Frame,
+    Walls,
+    Roof,
+    Finishing,
+    Complete
+};
+
+USTRUCT(BlueprintType)
+struct FRequiredMaterial
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FName MaterialType;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 RequiredAmount = 0;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 DeliveredAmount = 0;
+};
+
+UCLASS()
+class MEDIEVALGAME_API AConstructionSite : public AActor
+{
+    GENERATED_BODY()
+
+public:
+
+    AConstructionSite();
+
+protected:
+
+    virtual void BeginPlay() override;
+
+    virtual void Tick(float DeltaTime) override;
+
+public:
+
+    /* -------------------------------------------------
+       CONSTRUCTION DATA
+    ------------------------------------------------- */
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FString BuildingName;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    EConstructionPhase ConstructionPhase;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float ConstructionProgress;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    TArray<FRequiredMaterial> Materials;
+
+
+    /* -------------------------------------------------
+       BUILDING COMPONENTS
+    ------------------------------------------------- */
+
+    UPROPERTY(VisibleAnywhere)
+    USceneComponent* Root;
+
+    UPROPERTY(VisibleAnywhere)
+    UStaticMeshComponent* Foundation;
+
+    UPROPERTY(VisibleAnywhere)
+    UStaticMeshComponent* TimberFrame;
+
+    UPROPERTY(VisibleAnywhere)
+    UStaticMeshComponent* Walls;
+
+    UPROPERTY(VisibleAnywhere)
+    UStaticMeshComponent* Roof;
+
+    UPROPERTY(VisibleAnywhere)
+    UStaticMeshComponent* Door;
+
+    UPROPERTY(VisibleAnywhere)
+    USceneComponent* ConstructionScaffolding;
+
+
+    /* -------------------------------------------------
+       MATERIAL DELIVERY
+    ------------------------------------------------- */
+
+    UFUNCTION(BlueprintCallable)
+    bool DeliverMaterial(
+        FName MaterialType,
+        int32 Amount
+    );
+
+    UFUNCTION(BlueprintCallable)
+    float GetMaterialCompletion() const;
+
+
+    /* -------------------------------------------------
+       CONSTRUCTION
+    ------------------------------------------------- */
+
+    UFUNCTION(BlueprintCallable)
+    void UpdateConstruction();
+
+    UFUNCTION(BlueprintCallable)
+    void CompleteConstruction();
+
+private:
+
+    void UpdateBuildingMeshes();
+};
+#include "ConstructionSite.h"
+
+AConstructionSite::AConstructionSite()
+{
+    PrimaryActorTick.bCanEverTick = true;
+
+    Root = CreateDefaultSubobject<USceneComponent>(
+        TEXT("Root")
+    );
+
+    SetRootComponent(Root);
+
+    Foundation =
+        CreateDefaultSubobject<UStaticMeshComponent>(
+            TEXT("Foundation")
+        );
+
+    Foundation->SetupAttachment(Root);
+
+    TimberFrame =
+        CreateDefaultSubobject<UStaticMeshComponent>(
+            TEXT("TimberFrame")
+        );
+
+    TimberFrame->SetupAttachment(Root);
+
+    Walls =
+        CreateDefaultSubobject<UStaticMeshComponent>(
+            TEXT("Walls")
+        );
+
+    Walls->SetupAttachment(Root);
+
+    Roof =
+        CreateDefaultSubobject<UStaticMeshComponent>(
+            TEXT("Roof")
+        );
+
+    Roof->SetupAttachment(Root);
+
+    Door =
+        CreateDefaultSubobject<UStaticMeshComponent>(
+            TEXT("Door")
+        );
+
+    Door->SetupAttachment(Root);
+
+    ConstructionScaffolding =
+        CreateDefaultSubobject<USceneComponent>(
+            TEXT("Scaffolding")
+        );
+
+    ConstructionScaffolding->SetupAttachment(Root);
+
+    ConstructionProgress = 0.0f;
+
+    ConstructionPhase =
+        EConstructionPhase::Planning;
+}
+
+void AConstructionSite::BeginPlay()
+{
+    Super::BeginPlay();
+
+    UpdateBuildingMeshes();
+}
+
+void AConstructionSite::Tick(float DeltaTime)
+{
+    Super::Tick(DeltaTime);
+
+    UpdateConstruction();
+}
+
+bool AConstructionSite::DeliverMaterial(
+    FName MaterialType,
+    int32 Amount
+)
+{
+    for (FRequiredMaterial& Material : Materials)
+    {
+        if (Material.MaterialType == MaterialType)
+        {
+            Material.DeliveredAmount =
+                FMath::Min(
+                    Material.DeliveredAmount + Amount,
+                    Material.RequiredAmount
+                );
+
+            UpdateConstruction();
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+float AConstructionSite::GetMaterialCompletion() const
+{
+    if (Materials.Num() == 0)
+        return 0.0f;
+
+    float Required = 0.0f;
+    float Delivered = 0.0f;
+
+    for (const FRequiredMaterial& Material : Materials)
+    {
+        Required += Material.RequiredAmount;
+        Delivered += Material.DeliveredAmount;
+    }
+
+    if (Required <= 0.0f)
+        return 1.0f;
+
+    return Delivered / Required;
+}
+
+void AConstructionSite::UpdateConstruction()
+{
+    ConstructionProgress =
+        GetMaterialCompletion();
+
+    /*
+       BUILDING IS CREATED IN STAGES.
+
+       0%     = marked construction site
+       10%    = foundation begins
+       30%    = foundation complete
+       45%    = timber frame
+       65%    = walls
+       85%    = roof
+       100%   = finishing
+    */
+
+    if (ConstructionProgress < 0.10f)
+    {
+        ConstructionPhase =
+            EConstructionPhase::Planning;
+    }
+    else if (ConstructionProgress < 0.30f)
+    {
+        ConstructionPhase =
+            EConstructionPhase::Foundation;
+    }
+    else if (ConstructionProgress < 0.45f)
+    {
+        ConstructionPhase =
+            EConstructionPhase::Frame;
+    }
+    else if (ConstructionProgress < 0.65f)
+    {
+        ConstructionPhase =
+            EConstructionPhase::Walls;
+    }
+    else if (ConstructionProgress < 0.85f)
+    {
+        ConstructionPhase =
+            EConstructionPhase::Roof;
+    }
+    else if (ConstructionProgress < 1.0f)
+    {
+        ConstructionPhase =
+            EConstructionPhase::Finishing;
+    }
+    else
+    {
+        ConstructionPhase =
+            EConstructionPhase::Complete;
+
+        CompleteConstruction();
+    }
+
+    UpdateBuildingMeshes();
+}
+
+void AConstructionSite::UpdateBuildingMeshes()
+{
+    const float P =
+        ConstructionProgress;
+
+    if (Foundation)
+    {
+        Foundation->SetVisibility(
+            P >= 0.10f
+        );
+    }
+
+    if (TimberFrame)
+    {
+        TimberFrame->SetVisibility(
+            P >= 0.30f
+        );
+    }
+
+    if (Walls)
+    {
+        Walls->SetVisibility(
+            P >= 0.45f
+        );
+    }
+
+    if (Roof)
+    {
+        Roof->SetVisibility(
+            P >= 0.65f
+        );
+    }
+
+    if (Door)
+    {
+        Door->SetVisibility(
+            P >= 0.85f
+        );
+    }
+
+    if (ConstructionScaffolding)
+    {
+        ConstructionScaffolding->SetVisibility(
+            P < 1.0f
+        );
+    }
+}
+
+void AConstructionSite::CompleteConstruction()
+{
+    ConstructionProgress = 1.0f;
+
+    ConstructionPhase =
+        EConstructionPhase::Complete;
+
+    if (ConstructionScaffolding)
+    {
+        ConstructionScaffolding->SetVisibility(false);
+    }
+}
