@@ -1,0 +1,20 @@
+struct StartingSettlement
+{
+    int Families = 5;
+    int Population = 20;
+
+    int Food = 50;
+    int Carp = 20;
+    int WhiteBread = 10;
+    int Carrots = 10;
+    int Cabbages = 10;
+
+    int Logs = 10;
+    int UncutStone = 20;
+
+    int Shields = 10;
+    int Spears = 10;
+
+    int Militia = 0;
+    bool MilitiaAvailable = true;
+};
