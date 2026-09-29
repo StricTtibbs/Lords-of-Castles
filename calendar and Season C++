@@ -1,0 +1,608 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "SeasonSystem.generated.h"
+
+
+// ============================================================
+// SEASONS
+// ============================================================
+
+UENUM(BlueprintType)
+enum class ESeason : uint8
+{
+    Spring,
+    Summer,
+    Autumn,
+    Winter
+};
+
+
+// ============================================================
+// GAME SPEED
+// ============================================================
+
+UENUM(BlueprintType)
+enum class EGameSpeed : uint8
+{
+    Speed1x,
+    Speed2x,
+    Speed5x,
+    Speed10x
+};
+
+
+// ============================================================
+// FOOD
+// ============================================================
+
+USTRUCT(BlueprintType)
+struct FFoodResources
+{
+    GENERATED_BODY()
+
+    UPROPERTY(BlueprintReadWrite)
+    int32 Carp = 10;
+
+    UPROPERTY(BlueprintReadWrite)
+    int32 RoastBeef = 10;
+
+    UPROPERTY(BlueprintReadWrite)
+    int32 WhiteBreadLoaves = 10;
+
+    UPROPERTY(BlueprintReadWrite)
+    int32 Carrots = 10;
+
+    UPROPERTY(BlueprintReadWrite)
+    int32 Cabbages = 10;
+
+    int32 GetTotal() const
+    {
+        return
+            Carp +
+            RoastBeef +
+            WhiteBreadLoaves +
+            Carrots +
+            Cabbages;
+    }
+};
+
+
+// ============================================================
+// SEASON ACTOR
+// ============================================================
+
+UCLASS()
+class MEDIEVALGAME_API ASeasonSystem
+    : public AActor
+{
+    GENERATED_BODY()
+
+
+public:
+
+    ASeasonSystem();
+
+
+protected:
+
+    virtual void BeginPlay() override;
+
+
+public:
+
+    virtual void Tick(
+        float DeltaSeconds
+    ) override;
+
+
+    // ========================================================
+    // CALENDAR
+    // ========================================================
+
+    UPROPERTY(BlueprintReadOnly)
+    int32 CurrentMonth = 3;
+
+
+    UPROPERTY(BlueprintReadOnly)
+    ESeason CurrentSeason =
+        ESeason::Spring;
+
+
+    // ========================================================
+    // SPEED
+    // ========================================================
+
+    UPROPERTY(BlueprintReadWrite)
+    EGameSpeed GameSpeed =
+        EGameSpeed::Speed1x;
+
+
+    // ========================================================
+    // FOOD
+    // ========================================================
+
+    UPROPERTY(BlueprintReadWrite)
+    FFoodResources Food;
+
+
+    // ========================================================
+    // FREEZING
+    // ========================================================
+
+    UPROPERTY(BlueprintReadOnly)
+    bool bFreezing = false;
+
+
+    // ========================================================
+    // RESOURCE PRODUCTION
+    // ========================================================
+
+    UPROPERTY(BlueprintReadOnly)
+    bool bResourceProductionEnabled = true;
+
+
+    // ========================================================
+    // SPEED CONTROL
+    // ========================================================
+
+    UFUNCTION(BlueprintCallable)
+    void SetSpeed1x();
+
+    UFUNCTION(BlueprintCallable)
+    void SetSpeed2x();
+
+    UFUNCTION(BlueprintCallable)
+    void SetSpeed5x();
+
+    UFUNCTION(BlueprintCallable)
+    void SetSpeed10x();
+
+
+    // ========================================================
+    // SEASON
+    // ========================================================
+
+    UFUNCTION(BlueprintCallable)
+    void UpdateSeason();
+
+    UFUNCTION(BlueprintCallable)
+    void AdvanceMonth();
+
+
+    // ========================================================
+    // RESOURCES
+    // ========================================================
+
+    UFUNCTION(BlueprintCallable)
+    void ProduceResources(
+        float DeltaSeconds
+    );
+
+
+    // ========================================================
+    // TERRAIN
+    // ========================================================
+
+    UFUNCTION(BlueprintCallable)
+    void UpdateTerrainForSeason();
+
+
+private:
+
+    float MonthTimer = 0.0f;
+
+    float ProductionTimer = 0.0f;
+
+
+    // One game month = 60 real seconds at 1x
+    float SecondsPerMonth = 60.0f;
+
+
+    float GetSpeedMultiplier() const;
+};
+SeasonSystem.cpp
+#include "SeasonSystem.h"
+
+#include "Engine/World.h"
+
+
+ASeasonSystem::ASeasonSystem()
+{
+    PrimaryActorTick.bCanEverTick = true;
+
+
+    // ========================================================
+    // EXACT STARTING FOOD
+    // ========================================================
+
+    Food.Carp = 10;
+
+    Food.RoastBeef = 10;
+
+    Food.WhiteBreadLoaves = 10;
+
+    Food.Carrots = 10;
+
+    Food.Cabbages = 10;
+}
+
+
+void ASeasonSystem::BeginPlay()
+{
+    Super::BeginPlay();
+
+    CurrentMonth = 3;
+
+    CurrentSeason =
+        ESeason::Spring;
+
+    UpdateSeason();
+
+    UpdateTerrainForSeason();
+}
+
+
+void ASeasonSystem::Tick(
+    float DeltaSeconds
+)
+{
+    Super::Tick(
+        DeltaSeconds
+    );
+
+
+    const float Speed =
+        GetSpeedMultiplier();
+
+
+    // ========================================================
+    // REAL-TIME CALENDAR
+    // ========================================================
+
+    MonthTimer +=
+        DeltaSeconds * Speed;
+
+
+    if (
+        MonthTimer >=
+        SecondsPerMonth
+    )
+    {
+        MonthTimer -=
+            SecondsPerMonth;
+
+        AdvanceMonth();
+    }
+
+
+    // ========================================================
+    // CONTINUOUS RESOURCE PRODUCTION
+    // ========================================================
+
+    ProduceResources(
+        DeltaSeconds * Speed
+    );
+}
+
+
+// ============================================================
+// SPEED
+// ============================================================
+
+float ASeasonSystem::GetSpeedMultiplier() const
+{
+    switch (GameSpeed)
+    {
+        case EGameSpeed::Speed1x:
+            return 1.0f;
+
+        case EGameSpeed::Speed2x:
+            return 2.0f;
+
+        case EGameSpeed::Speed5x:
+            return 5.0f;
+
+        case EGameSpeed::Speed10x:
+            return 10.0f;
+    }
+
+    return 1.0f;
+}
+
+
+void ASeasonSystem::SetSpeed1x()
+{
+    GameSpeed =
+        EGameSpeed::Speed1x;
+}
+
+
+void ASeasonSystem::SetSpeed2x()
+{
+    GameSpeed =
+        EGameSpeed::Speed2x;
+}
+
+
+void ASeasonSystem::SetSpeed5x()
+{
+    GameSpeed =
+        EGameSpeed::Speed5x;
+}
+
+
+void ASeasonSystem::SetSpeed10x()
+{
+    GameSpeed =
+        EGameSpeed::Speed10x;
+}
+
+
+// ============================================================
+// ADVANCE MONTH
+// ============================================================
+
+void ASeasonSystem::AdvanceMonth()
+{
+    CurrentMonth++;
+
+    if (CurrentMonth > 12)
+    {
+        CurrentMonth = 1;
+    }
+
+    UpdateSeason();
+
+    UpdateTerrainForSeason();
+}
+
+
+// ============================================================
+// SEASON
+// ============================================================
+
+void ASeasonSystem::UpdateSeason()
+{
+    /*
+       March  = Spring
+       June   = Summer
+       September = Autumn
+       December  = Winter
+    */
+
+    if (
+        CurrentMonth >= 3 &&
+        CurrentMonth <= 5
+    )
+    {
+        CurrentSeason =
+            ESeason::Spring;
+    }
+
+    else if (
+        CurrentMonth >= 6 &&
+        CurrentMonth <= 8
+    )
+    {
+        CurrentSeason =
+            ESeason::Summer;
+    }
+
+    else if (
+        CurrentMonth >= 9 &&
+        CurrentMonth <= 11
+    )
+    {
+        CurrentSeason =
+            ESeason::Autumn;
+    }
+
+    else
+    {
+        CurrentSeason =
+            ESeason::Winter;
+    }
+
+
+    // ========================================================
+    // RESOURCE PRODUCTION
+    // ========================================================
+
+    /*
+       Autumn:
+       normal production stops.
+
+       Winter:
+       normal production stops.
+
+       Spring/Summer:
+       normal production allowed.
+    */
+
+    if (
+        CurrentSeason ==
+            ESeason::Autumn
+        ||
+        CurrentSeason ==
+            ESeason::Winter
+    )
+    {
+        bResourceProductionEnabled =
+            false;
+    }
+
+    else
+    {
+        bResourceProductionEnabled =
+            true;
+    }
+
+
+    // ========================================================
+    // FREEZING
+    // ========================================================
+
+    if (
+        CurrentSeason ==
+        ESeason::Winter
+    )
+    {
+        /*
+         * Freezing can occur during winter.
+         *
+         * This can later be replaced with
+         * temperature/weather calculations.
+         */
+
+        bFreezing =
+            FMath::FRand() < 0.60f;
+    }
+
+    else
+    {
+        bFreezing = false;
+    }
+}
+
+
+// ============================================================
+// RESOURCE PRODUCTION
+// ============================================================
+
+void ASeasonSystem::ProduceResources(
+    float DeltaSeconds
+)
+{
+    if (
+        !bResourceProductionEnabled
+    )
+    {
+        return;
+    }
+
+
+    // ========================================================
+    // SPRING
+    // ========================================================
+
+    if (
+        CurrentSeason ==
+        ESeason::Spring
+    )
+    {
+        Food.Carrots +=
+            FMath::FloorToInt(
+                0.10f *
+                DeltaSeconds
+            );
+
+        Food.Cabbages +=
+            FMath::FloorToInt(
+                0.10f *
+                DeltaSeconds
+            );
+    }
+
+
+    // ========================================================
+    // SUMMER
+    // ========================================================
+
+    if (
+        CurrentSeason ==
+        ESeason::Summer
+    )
+    {
+        Food.Carrots +=
+            FMath::FloorToInt(
+                0.20f *
+                DeltaSeconds
+            );
+
+        Food.Cabbages +=
+            FMath::FloorToInt(
+                0.20f *
+                DeltaSeconds
+            );
+
+        Food.Carp +=
+            FMath::FloorToInt(
+                0.10f *
+                DeltaSeconds
+            );
+    }
+}
+
+
+// ============================================================
+// TERRAIN
+// ============================================================
+
+void ASeasonSystem::UpdateTerrainForSeason()
+{
+    /*
+     * Connect this function to your actual
+     * Unreal terrain/material system.
+     *
+     * Spring:
+     * Light green grass.
+     *
+     * Summer:
+     * Drier yellow-green grass.
+     *
+     * Autumn:
+     * Orange/brown terrain + fallen leaves.
+     *
+     * Winter:
+     * White snow-covered terrain.
+     */
+
+
+    switch (CurrentSeason)
+    {
+        case ESeason::Spring:
+
+            UE_LOG(
+                LogTemp,
+                Log,
+                TEXT("Season: SPRING - Light green grass")
+            );
+
+            break;
+
+
+        case ESeason::Summer:
+
+            UE_LOG(
+                LogTemp,
+                Log,
+                TEXT("Season: SUMMER - Dry grass")
+            );
+
+            break;
+
+
+        case ESeason::Autumn:
+
+            UE_LOG(
+                LogTemp,
+                Log,
+                TEXT("Season: AUTUMN - Orange terrain and fallen leaves")
+            );
+
+            break;
+
+
+        case ESeason::Winter:
+
+            UE_LOG(
+                LogTemp,
+                Log,
+                TEXT("Season: WINTER - Snow covered terrain")
+            );
+
+            break;
+    }
+}
