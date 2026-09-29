@@ -1,0 +1,374 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Character.h"
+#include "MedievalCharacter.generated.h"
+
+
+/*
+==============================================================
+ MEDIEVAL CHARACTER
+
+ Designed for a highly detailed 3D medieval simulation.
+
+ CHARACTER SCALE
+ -------------------------------------------------------------
+
+ Unreal Engine uses centimetres.
+
+ 1 Unreal Unit = 1 centimetre.
+
+ Average adult:
+     Height:        168–182 cm
+     Shoulder width: 40–50 cm
+     Head height:    22–25 cm
+
+ The character is therefore built at realistic human scale.
+==============================================================
+*/
+
+
+UENUM(BlueprintType)
+enum class ECharacterOccupation : uint8
+{
+    Villager,
+    Farmer,
+    Woodcutter,
+    Miner,
+    Blacksmith,
+    Builder,
+    Militia,
+    Soldier,
+    Knight
+};
+
+
+UENUM(BlueprintType)
+enum class EArmourType : uint8
+{
+    None,
+    Padded,
+    Leather,
+    Mail,
+    Plate
+};
+
+
+UENUM(BlueprintType)
+enum class EWeaponType : uint8
+{
+    None,
+    Spear,
+    Sword,
+    Axe,
+    Bow
+};
+
+
+USTRUCT(BlueprintType)
+struct FCharacterEquipment
+{
+    GENERATED_BODY()
+
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    EWeaponType Weapon =
+        EWeaponType::None;
+
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    bool HasShield = false;
+
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    bool HasHelmet = false;
+
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    EArmourType Armour =
+        EArmourType::None;
+
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    bool HasHorse = false;
+};
+
+
+USTRUCT(BlueprintType)
+struct FCharacterAppearance
+{
+    GENERATED_BODY()
+
+
+    /*
+    ----------------------------------------------------------
+    BODY
+    ----------------------------------------------------------
+    */
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float Height = 175.0f;
+
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float ShoulderWidth = 45.0f;
+
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float BodyWidth = 36.0f;
+
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float ArmLength = 58.0f;
+
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float LegLength = 82.0f;
+
+
+    /*
+    ----------------------------------------------------------
+    AGE / VARIATION
+    ----------------------------------------------------------
+    */
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float Age = 30.0f;
+
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float BodyWeight = 72.0f;
+
+
+    /*
+    ----------------------------------------------------------
+    FACE
+    ----------------------------------------------------------
+    */
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float FaceWidth = 15.0f;
+
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float NoseLength = 5.0f;
+
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float JawWidth = 13.0f;
+
+
+    /*
+    ----------------------------------------------------------
+    HAIR
+    ----------------------------------------------------------
+    */
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 HairStyle = 0;
+
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 HairColour = 0;
+
+
+    /*
+    ----------------------------------------------------------
+    CLOTHING
+    ----------------------------------------------------------
+    */
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 TunicStyle = 0;
+
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 TrousersStyle = 0;
+
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 BootStyle = 0;
+};
+
+
+UCLASS()
+class MEDIEVALWORLD_API AMedievalCharacter
+    : public ACharacter
+{
+    GENERATED_BODY()
+
+
+public:
+
+    AMedievalCharacter();
+
+
+    virtual void BeginPlay() override;
+
+    virtual void Tick(
+        float DeltaSeconds
+    ) override;
+
+
+protected:
+
+
+    /*
+    ==========================================================
+    CHARACTER APPEARANCE
+    ==========================================================
+    */
+
+    UPROPERTY(
+        EditAnywhere,
+        BlueprintReadWrite,
+        Category="Character"
+    )
+    FCharacterAppearance Appearance;
+
+
+    /*
+    ==========================================================
+    EQUIPMENT
+    ==========================================================
+    */
+
+    UPROPERTY(
+        EditAnywhere,
+        BlueprintReadWrite,
+        Category="Equipment"
+    )
+    FCharacterEquipment Equipment;
+
+
+    /*
+    ==========================================================
+    OCCUPATION
+    ==========================================================
+    */
+
+    UPROPERTY(
+        EditAnywhere,
+        BlueprintReadWrite,
+        Category="Character"
+    )
+    ECharacterOccupation Occupation =
+        ECharacterOccupation::Villager;
+
+
+    /*
+    ==========================================================
+    FAMILY
+    ==========================================================
+    */
+
+    UPROPERTY(
+        EditAnywhere,
+        BlueprintReadWrite,
+        Category="Family"
+    )
+    int32 FamilyID = 0;
+
+
+    /*
+    ==========================================================
+    MESH COMPONENTS
+    ==========================================================
+    */
+
+    UPROPERTY(
+        VisibleAnywhere,
+        BlueprintReadOnly
+    )
+    USkeletalMeshComponent* BodyMesh;
+
+
+    UPROPERTY(
+        VisibleAnywhere,
+        BlueprintReadOnly
+    )
+    USkeletalMeshComponent* ClothingMesh;
+
+
+    UPROPERTY(
+        VisibleAnywhere,
+        BlueprintReadOnly
+    )
+    USkeletalMeshComponent* HairMesh;
+
+
+    UPROPERTY(
+        VisibleAnywhere,
+        BlueprintReadOnly
+    )
+    USkeletalMeshComponent* HelmetMesh;
+
+
+    UPROPERTY(
+        VisibleAnywhere,
+        BlueprintReadOnly
+    )
+    USkeletalMeshComponent* ArmourMesh;
+
+
+    UPROPERTY(
+        VisibleAnywhere,
+        BlueprintReadOnly
+    )
+    UStaticMeshComponent* ShieldMesh;
+
+
+    UPROPERTY(
+        VisibleAnywhere,
+        BlueprintReadOnly
+    )
+    UStaticMeshComponent* WeaponMesh;
+
+
+    /*
+    ==========================================================
+    CHARACTER CREATION
+    ==========================================================
+    */
+
+    void GenerateAppearance();
+
+    void GenerateClothing();
+
+    void UpdateEquipment();
+
+    void EquipSpear();
+
+    void EquipShield();
+
+    void EquipHelmet();
+
+    void EquipMail();
+
+    void EquipPlate();
+
+
+    /*
+    ==========================================================
+    ANIMATION
+    ==========================================================
+    */
+
+    void UpdateLocomotion(
+        float DeltaSeconds
+    );
+
+
+    void UpdateEquipmentAnimation();
+
+
+    /*
+    ==========================================================
+    DETAIL / LOD
+    ==========================================================
+    */
+
+    void UpdateLOD(
+        float DistanceFromCamera
+    );
+};
