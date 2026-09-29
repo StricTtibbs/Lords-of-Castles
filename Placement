@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Medieval Kingdom — Placement</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    user-select: none;
+}
+
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: Georgia, "Times New Roman", serif;
+    background: #111;
+}
+
+/* =========================================================
+   GAME
+   ========================================================= */
+
+#game {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #5d704e;
+}
+
+/* =========================================================
+   TERRAIN
+   ========================================================= */
+
+#terrain {
+    position: absolute;
+
+    width: 180%;
+    height: 180%;
+
+    left: -40%;
+    top: -40%;
+
+    background-image:
+        linear-gradient(
+            rgba(70,90,55,.12),
+            rgba(70,90,55,.12)
+        ),
+        url("start-game.png");
+
+    background-size: cover;
+    background-position: center;
+
+    transform-origin: center center;
+
+    transition: transform .05s linear;
+}
+
+/* subtle terrain texture */
+#terrain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background-image:
+        radial-gradient(
+            circle,
+            rgba(255,255,255,.035) 1px,
+            transparent 1px
+        );
+
+    background-size: 7px 7px;
+
+    pointer-events: none;
+}
+
+/* =========================================================
+   BANNER
+   ========================================================= */
+
+#banner {
+    position: absolute;
+
+    top: 20px;
+    right: 22px;
+
+    width: 100px;
+    height: 135px;
+
+    object-fit: contain;
+
+    z-index: 100;
+
+    filter:
+        drop-shadow(0 4px 5px rgba(0,0,0,.7));
+}
+
+/* =========================================================
+   TOP LEFT
+   ========================================================= */
+
+#title {
+    position: absolute;
+
+    top: 18px;
+    left: 20px;
+
+    z-index: 100;
+
+    padding: 10px 16px;
+
+    background: rgba(20,20,20,.82);
+
+    border: 1px solid #b69a60;
+
+    color: #ead7a2;
+
+    font-size: 19px;
+
+    box-shadow: 0 3px 12px rgba(0,0,0,.5);
+}
+
+/* =========================================================
+   BUILD MENU
+   ========================================================= */
+
+#buildMenu {
+    position: absolute;
+
+    left: 18px;
+    top: 90px;
+
+    width: 235px;
+
+    z-index: 100;
+
+    background: rgba(22,22,20,.92);
+
+    border: 1px solid #b69a60;
+
+    box-shadow:
+        0 5px 20px rgba(0,0,0,.65);
+
+    color: white;
+
+    padding: 12px;
+}
+
+#buildMenu h2 {
+    margin: 0 0 10px 0;
+
+    color: #e4ce95;
+
+    font-size: 18px;
+
+    border-bottom: 1px solid #77643f;
+
+    padding-bottom: 8px;
+}
+
+.buildButton {
+    width: 100%;
+
+    padding: 10px;
+
+    margin-bottom: 7px;
+
+    background:
+        linear-gradient(
+            #3b3931,
+            #282721
+        );
+
+    border: 1px solid #74633f;
+
+    color: #eee;
+
+    text-align: left;
+
+    font-family: inherit;
+
+    cursor: pointer;
+
+    transition: .15s;
+}
+
+.buildButton:hover {
+    background: #51472f;
+    border-color: #c8ab6a;
+}
+
+.buildButton.selected {
+    background: #665735;
+    border-color: #e0c47c;
+}
+
+.buildName {
+    font-size: 14px;
+}
+
+.buildCost {
+    margin-top: 3px;
+
+    font-size: 11px;
+
+    color: #c5b98f;
+}
+
+/* =========================================================
+   PLACEMENT GHOST
+   ========================================================= */
+
+#ghost {
+    position: absolute;
+
+    width: 100px;
+    height: 100px;
+
+    transform:
+        translate(-50%, -50%)
+        rotate(0deg);
+
+    z-index: 50;
+
+    display: none;
+
+    pointer-events: none;
+
+    border: 2px solid rgba(255,255,255,.8);
+
+    background:
+        rgba(210,180,100,.25);
+
+    box-shadow:
+        0 0 20px rgba(0,0,0,.35);
+}
+
+#ghost::before {
+    content: "";
+
+    position: absolute;
+
+    left: 50%;
+    top: -18px;
+
+    width: 2px;
+    height: 18px;
+
+    background: white;
+}
+
+#ghostLabel {
+    position: absolute;
+
+    left: 50%;
+    top: 50%;
+
+    transform: translate(-50%, -50%);
+
+    white-space: nowrap;
+
+    color: white;
+
+    text-shadow:
+        0 2px 3px black;
+
+    font-size: 12px;
+}
+
+/* =========================================================
+   BOTTOM PANEL
+   ========================================================= */
+
+#bottomPanel {
+    position: absolute;
+
+    left: 50%;
+    bottom: 18px;
+
+    transform: translateX(-50%);
+
+    z-index: 100;
+
+    min-width: 440px;
+
+    padding: 11px 18px;
+
+    background: rgba(18,18,17,.9);
+
+    border: 1px solid #b69a60;
+
+    color: white;
+
+    text-align: center;
+
+    box-shadow:
+        0 4px 15px rgba(0,0,0,.65);
+}
+
+#selectedName {
+    color: #e6cf96;
+
+    font-size: 17px;
+
+    margin-bottom: 5px;
+}
+
+#rotationText {
+    font-size: 13px;
+
+    color: #ccc;
+}
+
+/* =========================================================
+   CONTROLS
+   ========================================================= */
+
+#controls {
+    position: absolute;
+
+    right: 18px;
+    bottom: 18px;
+
+    z-index: 100;
+
+    background: rgba(18,18,17,.88);
+
+    border: 1px solid #8e784c;
+
+    padding: 10px 14px;
+
+    color: #ddd;
+
+    font-size: 12px;
+
+    line-height: 1.7;
+}
+
+#controls strong {
+    color: #e2ca8e;
+}
+
+/* =========================================================
+   MAP
+   ========================================================= */
+
+#map {
+    display: none;
+
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 500;
+
+    background: rgba(0,0,0,.8);
+
+    align-items: center;
+    justify-content: center;
+}
+
+#mapBox {
+    position: relative;
+
+    width: min(850px, 85vw);
+    height: min(650px, 80vh);
+
+    background: #27251f;
+
+    border: 3px solid #b99d61;
+
+    box-shadow:
+        0 0 40px rgba(0,0,0,.9);
+}
+
+#mapBox img {
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+#mapTitle {
+    position: absolute;
+
+    left: 18px;
+    top: 12px;
+
+    z-index: 10;
+
+    color: #ead49a;
+
+    font-size: 22px;
+
+    text-shadow:
+        0 2px 4px black;
+}
+
+#closeMap {
+    position: absolute;
+
+    right: 12px;
+    top: 10px;
+
+    z-index: 20;
+
+    width: 34px;
+    height: 34px;
+
+    border: 1px solid #b99d61;
+
+    background: rgba(20,20,20,.9);
+
+    color: white;
+
+    font-size: 20px;
+
+    cursor: pointer;
+}
+
+/* =========================================================
+   PLACED BUILDINGS
+   ========================================================= */
+
+.placedBuilding {
+    position: absolute;
+
+    transform:
+        translate(-50%, -50%);
+
+    z-index: 45;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background:
+        rgba(80,60,35,.85);
+
+    border: 2px solid #d2b56e;
+
+    box-shadow:
+        0 5px 10px rgba(0,0,0,.45);
+
+    color: white;
+
+    font-size: 11px;
+
+    text-shadow:
+        0 2px 3px black;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+    <!-- TERRAIN -->
+    <div id="terrain"></div>
+
+    <!-- BANNER -->
+    <img id="banner" src="" alt="Kingdom Banner">
+
+    <!-- TITLE -->
+    <div id="title">
+        BUILDING PLACEMENT
+    </div>
+
+    <!-- BUILD MENU -->
+    <div id="buildMenu">
+
+        <h2>Construction</h2>
+
+        <button class="buildButton"
+                data-name="House"
+                data-cost="20 Wood"
+                data-size="70">
+
+            <div class="buildName">
+                🏠 House
+            </div>
+
+            <div class="buildCost">
+                20 Wood
+            </div>
+
+        </button>
+
+        <button class="buildButton"
+                data-name="Farm"
+                data-cost="35 Wood"
+                data-size="120">
+
+            <div class="buildName">
+                🌾 Farm
+            </div>
+
+            <div class="buildCost">
+                35 Wood
+            </div>
+
+        </button>
+
+        <button class="buildButton"
+                data-name="Woodcutter"
+                data-cost="30 Wood"
+                data-size="75">
+
+            <div class="buildName">
+                🪓 Woodcutter
+            </div>
+
+            <div class="buildCost">
+                30 Wood
+            </div>
+
+        </button>
+
+        <button class="buildButton"
+                data-name="Storehouse"
+                data-cost="60 Wood"
+                data-size="90">
+
+            <div class="buildName">
+                🏚 Storehouse
+            </div>
+
+            <div class="buildCost">
+                60 Wood
+            </div>
+
+        </button>
+
+        <button class="buildButton"
+                data-name="Blacksmith"
+                data-cost="70 Wood + 20 Stone"
+                data-size="85">
+
+            <div class="buildName">
+                ⚒ Blacksmith
+            </div>
+
+            <div class="buildCost">
+                70 Wood + 20 Stone
+            </div>
+
+        </button>
+
+        <button class="buildButton"
+                data-name="Barracks"
+                data-cost="100 Wood + 50 Stone"
+                data-size="110">
+
+            <div class="buildName">
+                🛡 Barracks
+            </div>
+
+            <div class="buildCost">
+                100 Wood + 50 Stone
+            </div>
+
+        </button>
+
+        <button class="buildButton"
+                data-name="Church"
+                data-cost="120 Wood + 80 Stone"
+                data-size="130">
+
+            <div class="buildName">
+                ⛪ Church
+            </div>
+
+            <div class="buildCost">
+                120 Wood + 80 Stone
+            </div>
+
+        </button>
+
+    </div>
+
+    <!-- PLACEMENT GHOST -->
+    <div id="ghost">
+        <div id="ghostLabel">
+            House
+        </div>
+    </div>
+
+    <!-- BOTTOM INFORMATION -->
+    <div id="bottomPanel">
+
+        <div id="selectedName">
+            Select a building
+        </div>
+
+        <div id="rotationText">
+            Rotation: 0°
+        </div>
+
+    </div>
+
+    <!-- CONTROLS -->
+    <div id="controls">
+
+        <strong>W</strong> Forward<br>
+        <strong>A</strong> Left<br>
+        <strong>D</strong> Right<br>
+        <strong>C</strong> Back<br>
+        <strong>Q / E</strong> Rotate Camera<br>
+        <strong>R</strong> Rotate Structure<br>
+        <strong>Left Click</strong> Place<br>
+        <strong>Right Click</strong> Cancel<br>
+        <strong>M</strong> Map
+
+    </div>
+
+    <!-- MAP -->
+    <div id="map">
+
+        <div id="mapBox">
+
+            <div id="mapTitle">
+                Kingdom Map
+            </div>
+
+            <button id="closeMap">×</button>
+
+            <img src="map.png"
+                 alt="Kingdom Map">
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   BANNER
+   ========================================================= */
+
+const banner =
+    document.getElementById("banner");
+
+const savedBanner =
+    localStorage.getItem("chosenBanner");
+
+if (savedBanner) {
+
+    banner.src = savedBanner;
+
+} else {
+
+    banner.src = "banner1.png";
+
+}
+
+
+/* =========================================================
+   CAMERA
+   ========================================================= */
+
+const terrain =
+    document.getElementById("terrain");
+
+let cameraX = 0;
+let cameraY = 0;
+let cameraRotation = 0;
+
+const speed = 12;
+const cameraTurnSpeed = 2.5;
+
+const keys = {};
+
+
+/* =========================================================
+   KEYBOARD
+   ========================================================= */
+
+document.addEventListener("keydown", function(e) {
+
+    const key =
+        e.key.toLowerCase();
+
+    keys[key] = true;
+
+    if (
+        [
+            "w",
+            "a",
+            "s",
+            "d",
+            "c",
+            "q",
+            "e",
+            "r",
+            "m"
+        ].includes(key)
+    ) {
+        e.preventDefault();
+    }
+
+    /* MAP */
+
+    if (
+        key === "m" &&
+        !e.repeat
+    ) {
+
+        toggleMap();
+
+    }
+
+    /* ROTATE STRUCTURE */
+
+    if (
+        key === "r" &&
+        !e.repeat
+    ) {
+
+        rotateStructure();
+
+    }
+
+});
+
+
+document.addEventListener("keyup", function(e) {
+
+    keys[
+        e.key.toLowerCase()
+    ] = false;
+
+});
+
+
+/* =========================================================
+   MOVEMENT
+   ========================================================= */
+
+function update() {
+
+    if (keys["w"]) {
+        cameraY += speed;
+    }
+
+    if (keys["c"]) {
+        cameraY -= speed;
+    }
+
+    if (keys["a"]) {
+        cameraX += speed;
+    }
+
+    if (keys["d"]) {
+        cameraX -= speed;
+    }
+
+    if (keys["q"]) {
+        cameraRotation -= cameraTurnSpeed;
+    }
+
+    if (keys["e"]) {
+        cameraRotation += cameraTurnSpeed;
+    }
+
+    terrain.style.transform =
+        `
+        translate(
+            ${cameraX}px,
+            ${cameraY}px
+        )
+        rotate(
+            ${cameraRotation}deg
+        )
+        `;
+
+    requestAnimationFrame(update);
+}
+
+update();
+
+
+/* =========================================================
+   BUILDING SELECTION
+   ========================================================= */
+
+const buttons =
+    document.querySelectorAll(".buildButton");
+
+const ghost =
+    document.getElementById("ghost");
+
+const ghostLabel =
+    document.getElementById("ghostLabel");
+
+const selectedName =
+    document.getElementById("selectedName");
+
+const rotationText =
+    document.getElementById("rotationText");
+
+let selectedBuilding = null;
+
+let buildingSize = 80;
+
+let structureRotation = 0;
+
+
+buttons.forEach(button => {
+
+    button.addEventListener("click", function() {
+
+        buttons.forEach(b =>
+            b.classList.remove("selected")
+        );
+
+        this.classList.add("selected");
+
+        selectedBuilding =
+            this.dataset.name;
+
+        buildingSize =
+            Number(this.dataset.size);
+
+        structureRotation = 0;
+
+        selectedName.textContent =
+            selectedBuilding;
+
+        rotationText.textContent =
+            "Rotation: 0°";
+
+        ghost.style.width =
+            buildingSize + "px";
+
+        ghost.style.height =
+            buildingSize + "px";
+
+        ghostLabel.textContent =
+            selectedBuilding;
+
+        ghost.style.display =
+            "block";
+
+    });
+
+});
+
+
+/* =========================================================
+   MOUSE PLACEMENT
+   ========================================================= */
+
+document.addEventListener("mousemove", function(e) {
+
+    if (!selectedBuilding)
+        return;
+
+    ghost.style.left =
+        e.clientX + "px";
+
+    ghost.style.top =
+        e.clientY + "px";
+
+});
+
+
+/* =========================================================
+   PLACE BUILDING
+   ========================================================= */
+
+document.addEventListener("mousedown", function(e) {
+
+    if (e.button !== 0)
+        return;
+
+    if (!selectedBuilding)
+        return;
+
+    /*
+        Don't place when clicking the build menu.
+    */
+
+    if (
+        e.target.closest("#buildMenu") ||
+        e.target.closest("#bottomPanel") ||
+        e.target.closest("#controls") ||
+        e.target.closest("#banner")
+    ) {
+        return;
+    }
+
+
+    const building =
+        document.createElement("div");
+
+    building.className =
+        "placedBuilding";
+
+    building.textContent =
+        selectedBuilding;
+
+    building.style.left =
+        e.clientX + "px";
+
+    building.style.top =
+        e.clientY + "px";
+
+    building.style.width =
+        buildingSize + "px";
+
+    building.style.height =
+        buildingSize + "px";
+
+    building.style.transform =
+        `
+        translate(-50%, -50%)
+        rotate(${structureRotation}deg)
+        `;
+
+    document.getElementById("game")
+        .appendChild(building);
+
+});
+
+
+/* =========================================================
+   RIGHT CLICK = CANCEL
+   ========================================================= */
+
+document.addEventListener("contextmenu", function(e) {
+
+    e.preventDefault();
+
+    selectedBuilding = null;
+
+    ghost.style.display =
+        "none";
+
+    buttons.forEach(b =>
+        b.classList.remove("selected")
+    );
+
+    selectedName.textContent =
+        "Select a building";
+
+});
+
+
+/* =========================================================
+   STRUCTURE ROTATION
+   ========================================================= */
+
+function rotateStructure() {
+
+    if (!selectedBuilding)
+        return;
+
+    structureRotation += 15;
+
+    if (structureRotation >= 360) {
+
+        structureRotation = 0;
+
+    }
+
+    ghost.style.transform =
+        `
+        translate(-50%, -50%)
+        rotate(${structureRotation}deg)
+        `;
+
+    rotationText.textContent =
+        "Rotation: " +
+        structureRotation +
+        "°";
+
+}
+
+
+/* =========================================================
+   MAP
+   ========================================================= */
+
+const map =
+    document.getElementById("map");
+
+const closeMap =
+    document.getElementById("closeMap");
+
+
+function toggleMap() {
+
+    if (map.style.display === "flex") {
+
+        map.style.display = "none";
+
+    } else {
+
+        map.style.display = "flex";
+
+    }
+
+}
+
+
+closeMap.addEventListener("click", function() {
+
+    map.style.display =
+        "none";
+
+});
+
+
+map.addEventListener("click", function(e) {
+
+    if (e.target === map) {
+
+        map.style.display =
+            "none";
+
+    }
+
+});
+
+
+/* =========================================================
+   INITIAL STATE
+   ========================================================= */
+
+ghost.style.display =
+    "none";
+
+</script>
+
+</body>
+</html>
