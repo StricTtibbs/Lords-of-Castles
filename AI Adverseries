@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Medieval Village - Food System</title>
+
+<style>
+    body {
+        margin: 0;
+        background: transparent;
+        font-family: Georgia, serif;
+    }
+
+    /* ==============================
+       FOOD RESOURCE DISPLAY
+       ============================== */
+
+    .food-container {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 9999;
+    }
+
+    .food-resource {
+        position: relative;
+
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        padding: 9px 14px;
+
+        background: rgba(25, 22, 18, 0.94);
+
+        border: 1px solid #8c7955;
+        border-radius: 5px;
+
+        color: white;
+
+        font-size: 20px;
+
+        cursor: pointer;
+
+        user-select: none;
+    }
+
+    .food-icon {
+        font-size: 23px;
+    }
+
+    .food-number {
+        font-size: 19px;
+    }
+
+
+    /* ==============================
+       HOVER INFORMATION
+       ============================== */
+
+    .food-tooltip {
+
+        display: none;
+
+        position: absolute;
+
+        top: calc(100% + 8px);
+        left: 0;
+
+        width: 260px;
+
+        padding: 15px;
+
+        background: rgba(24, 21, 17, 0.98);
+
+        border: 1px solid #8c7955;
+        border-radius: 6px;
+
+        color: #eee;
+
+        box-shadow:
+            0 5px 20px rgba(0,0,0,0.5);
+
+        font-size: 15px;
+    }
+
+
+    .food-resource:hover .food-tooltip {
+        display: block;
+    }
+
+
+    .food-tooltip h3 {
+
+        margin: 0 0 12px 0;
+
+        padding-bottom: 8px;
+
+        border-bottom: 1px solid #65553b;
+
+        font-size: 19px;
+
+        font-weight: normal;
+    }
+
+
+    .food-row {
+
+        display: flex;
+
+        justify-content: space-between;
+
+        padding: 6px 0;
+    }
+
+
+    .food-name {
+        display: flex;
+        gap: 8px;
+    }
+
+
+    .food-amount {
+        font-weight: bold;
+    }
+
+
+    .food-total {
+
+        margin-top: 10px;
+
+        padding-top: 10px;
+
+        border-top: 1px solid #65553b;
+
+        display: flex;
+
+        justify-content: space-between;
+
+        font-size: 16px;
+    }
+
+</style>
+</head>
+
+
+<body>
+
+
+<!-- =========================================
+     FOOD RESOURCE
+     ========================================= -->
+
+<div class="food-container">
+
+    <div
+        class="food-resource"
+        id="foodResource"
+    >
+
+        <span class="food-icon">
+            🍞
+        </span>
+
+        <span
+            class="food-number"
+            id="foodTotal"
+        >
+            50
+        </span>
+
+
+        <!-- =====================================
+             HOVER PANEL
+             ===================================== -->
+
+        <div class="food-tooltip">
+
+            <h3>
+                Food
+            </h3>
+
+
+            <div class="food-row">
+
+                <span class="food-name">
+                    🐟 Carp
+                </span>
+
+                <span
+                    class="food-amount"
+                    id="carp"
+                >
+                    10
+                </span>
+
+            </div>
+
+
+            <div class="food-row">
+
+                <span class="food-name">
+                    🥩 Roast Beef
+                </span>
+
+                <span
+                    class="food-amount"
+                    id="roastBeef"
+                >
+                    10
+                </span>
+
+            </div>
+
+
+            <div class="food-row">
+
+                <span class="food-name">
+                    🍞 White Bread Loaves
+                </span>
+
+                <span
+                    class="food-amount"
+                    id="whiteBread"
+                >
+                    10
+                </span>
+
+            </div>
+
+
+            <div class="food-row">
+
+                <span class="food-name">
+                    🥕 Carrots
+                </span>
+
+                <span
+                    class="food-amount"
+                    id="carrots"
+                >
+                    10
+                </span>
+
+            </div>
+
+
+            <div class="food-row">
+
+                <span class="food-name">
+                    🥬 Cabbages
+                </span>
+
+                <span
+                    class="food-amount"
+                    id="cabbages"
+                >
+                    10
+                </span>
+
+            </div>
+
+
+            <div class="food-total">
+
+                <span>
+                    Total Food
+                </span>
+
+                <span id="totalFood">
+                    50
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =========================================
+   STARTING FOOD
+   ========================================= */
+
+const food = {
+
+    carp: 10,
+
+    roastBeef: 10,
+
+    whiteBread: 10,
+
+    carrots: 10,
+
+    cabbages: 10
+
+};
+
+
+/* =========================================
+   CALCULATE TOTAL FOOD
+   ========================================= */
+
+function getTotalFood() {
+
+    return (
+        food.carp +
+        food.roastBeef +
+        food.whiteBread +
+        food.carrots +
+        food.cabbages
+    );
+
+}
+
+
+/* =========================================
+   UPDATE DISPLAY
+   ========================================= */
+
+function updateFoodDisplay() {
+
+    document.getElementById(
+        "carp"
+    ).textContent =
+        food.carp;
+
+
+    document.getElementById(
+        "roastBeef"
+    ).textContent =
+        food.roastBeef;
+
+
+    document.getElementById(
+        "whiteBread"
+    ).textContent =
+        food.whiteBread;
+
+
+    document.getElementById(
+        "carrots"
+    ).textContent =
+        food.carrots;
+
+
+    document.getElementById(
+        "cabbages"
+    ).textContent =
+        food.cabbages;
+
+
+    const total =
+        getTotalFood();
+
+
+    document.getElementById(
+        "foodTotal"
+    ).textContent =
+        total;
+
+
+    document.getElementById(
+        "totalFood"
+    ).textContent =
+        total;
+
+}
+
+
+/* =========================================
+   START GAME
+   ========================================= */
+
+updateFoodDisplay();
+
+</script>
+
+</body>
+</html>
