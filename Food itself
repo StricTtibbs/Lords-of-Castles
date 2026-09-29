@@ -1,0 +1,142 @@
+// VillageFoodComponent.cpp
+
+#include "VillageFoodComponent.h"
+
+
+UVillageFoodComponent::UVillageFoodComponent()
+{
+    PrimaryComponentTick.bCanEverTick = false;
+
+
+    // =========================================
+    // EXACT STARTING FOOD
+    // =========================================
+
+    Food.Carp = 10;
+
+    Food.RoastBeef = 10;
+
+    Food.WhiteBreadLoaves = 10;
+
+    Food.Carrots = 10;
+
+    Food.Cabbages = 10;
+}
+
+
+// =============================================
+// TOTAL
+// =============================================
+
+int32 UVillageFoodComponent::GetTotalFood() const
+{
+    return Food.GetTotalFood();
+}
+
+
+// =============================================
+// ADD FOOD
+// =============================================
+
+void UVillageFoodComponent::AddCarp(int32 Amount)
+{
+    Food.Carp += FMath::Max(0, Amount);
+}
+
+
+void UVillageFoodComponent::AddRoastBeef(int32 Amount)
+{
+    Food.RoastBeef += FMath::Max(0, Amount);
+}
+
+
+void UVillageFoodComponent::AddWhiteBread(int32 Amount)
+{
+    Food.WhiteBreadLoaves += FMath::Max(0, Amount);
+}
+
+
+void UVillageFoodComponent::AddCarrots(int32 Amount)
+{
+    Food.Carrots += FMath::Max(0, Amount);
+}
+
+
+void UVillageFoodComponent::AddCabbages(int32 Amount)
+{
+    Food.Cabbages += FMath::Max(0, Amount);
+}
+
+
+// =============================================
+// CONSUME FOOD
+// =============================================
+
+bool UVillageFoodComponent::ConsumeCarp(int32 Amount)
+{
+    if (Amount <= 0)
+        return false;
+
+    if (Food.Carp < Amount)
+        return false;
+
+    Food.Carp -= Amount;
+
+    return true;
+}
+
+
+bool UVillageFoodComponent::ConsumeRoastBeef(int32 Amount)
+{
+    if (Amount <= 0)
+        return false;
+
+    if (Food.RoastBeef < Amount)
+        return false;
+
+    Food.RoastBeef -= Amount;
+
+    return true;
+}
+
+
+bool UVillageFoodComponent::ConsumeWhiteBread(int32 Amount)
+{
+    if (Amount <= 0)
+        return false;
+
+    if (Food.WhiteBreadLoaves < Amount)
+        return false;
+
+    Food.WhiteBreadLoaves -= Amount;
+
+    return true;
+}
+
+
+bool UVillageFoodComponent::ConsumeCarrots(int32 Amount)
+{
+    if (Amount <= 0)
+        return false;
+
+    if (Food.Carrots < Amount)
+        return false;
+
+    Food.Carrots -= Amount;
+
+    return true;
+}
+
+
+bool UVillageFoodComponent::ConsumeCabbages(int32 Amount)
+{
+    if (Amount <= 0)
+        return false;
+
+    if (Food.Cabbages < Amount)
+        return false;
+
+    Food.Cabbages -= Amount;
+
+    return true;
+}
