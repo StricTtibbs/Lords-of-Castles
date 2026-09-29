@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Medieval Settlement HUD</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    height: 100vh;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at center, #4b4638 0%, #25231d 55%, #14120f 100%);
+    color: #ead8b2;
+    font-family: Georgia, "Times New Roman", serif;
+}
+
+/* =========================================================
+   TOP LEFT SETTLEMENT HUD
+========================================================= */
+
+.settlement-hud {
+    position: absolute;
+    top: 18px;
+    left: 18px;
+
+    width: 320px;
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(61,48,34,0.98),
+            rgba(25,20,15,0.98)
+        );
+
+    border: 2px solid #957447;
+
+    box-shadow:
+        0 0 0 2px #2b2015,
+        0 8px 25px rgba(0,0,0,0.65);
+
+    padding: 12px;
+
+    z-index: 1000;
+}
+
+.hud-title {
+    text-align: center;
+
+    color: #f0ddb3;
+
+    font-size: 18px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+
+    padding-bottom: 9px;
+    margin-bottom: 8px;
+
+    border-bottom: 1px solid #755a37;
+}
+
+/* Individual statistic */
+
+.stat {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+
+    min-height: 38px;
+
+    padding: 5px 7px;
+
+    border-bottom: 1px solid rgba(130,100,60,0.25);
+
+    cursor: help;
+}
+
+.stat:hover {
+    background: rgba(120,90,50,0.18);
+}
+
+.stat-icon {
+    width: 36px;
+    font-size: 22px;
+    text-align: center;
+    margin-right: 8px;
+}
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-name {
+    color: #c7b188;
+    font-size: 11px;
+    text-transform: uppercase;
+}
+
+.stat-value {
+    color: #f0dfbb;
+    font-size: 14px;
+    margin-top: 2px;
+}
+
+/* =========================================================
+   TOOLTIP
+========================================================= */
+
+.tooltip {
+    position: absolute;
+
+    left: 100%;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    width: 250px;
+
+    background:
+        linear-gradient(
+            180deg,
+            #3a2d20,
+            #1d1711
+        );
+
+    border: 2px solid #9a7948;
+
+    padding: 11px;
+
+    margin-left: 10px;
+
+    color: #ddc99f;
+
+    font-size: 12px;
+    line-height: 1.5;
+
+    opacity: 0;
+    pointer-events: none;
+
+    transition: opacity 0.12s;
+
+    box-shadow: 0 5px 20px rgba(0,0,0,0.7);
+
+    z-index: 2000;
+}
+
+.stat:hover .tooltip {
+    opacity: 1;
+}
+
+.tooltip-title {
+    color: #f1d59e;
+    font-size: 14px;
+    margin-bottom: 5px;
+    border-bottom: 1px solid #705532;
+    padding-bottom: 4px;
+}
+
+/* =========================================================
+   RESOURCE SECTION
+========================================================= */
+
+.resource-title {
+    text-align: center;
+
+    color: #d8bd87;
+
+    font-size: 13px;
+    letter-spacing: 2px;
+
+    margin-top: 8px;
+    padding: 8px 0 5px;
+
+    border-top: 1px solid #705532;
+}
+
+.resource {
+    display: flex;
+    align-items: center;
+
+    height: 34px;
+
+    padding: 3px 7px;
+
+    border-bottom: 1px solid rgba(130,100,60,0.18);
+}
+
+.resource-icon {
+    width: 35px;
+
+    font-size: 20px;
+
+    text-align: center;
+}
+
+.resource-name {
+    flex: 1;
+
+    color: #c9b58d;
+
+    font-size: 11px;
+    text-transform: uppercase;
+}
+
+.resource-amount {
+    color: #f0dfbb;
+    font-size: 13px;
+}
+
+/* =========================================================
+   BOTTOM BUILDING MENU
+========================================================= */
+
+.building-menu {
+    position: absolute;
+
+    left: 50%;
+    bottom: 20px;
+
+    transform: translateX(-50%);
+
+    width: 900px;
+
+    background:
+        linear-gradient(
+            #2d241b,
+            #17130f
+        );
+
+    border: 3px solid #8d7046;
+
+    box-shadow:
+        0 0 0 2px #332719,
+        0 10px 35px rgba(0,0,0,0.75);
+
+    padding: 13px;
+
+    z-index: 1000;
+}
+
+.menu-title {
+    text-align: center;
+
+    font-size: 22px;
+
+    letter-spacing: 3px;
+
+    color: #f0dfba;
+
+    border-bottom: 1px solid #735a37;
+
+    padding-bottom: 9px;
+
+    margin-bottom: 10px;
+}
+
+.categories {
+    display: grid;
+
+    grid-template-columns: repeat(7, 1fr);
+
+    gap: 7px;
+}
+
+.category {
+    height: 90px;
+
+    background:
+        linear-gradient(
+            #443629,
+            #241d17
+        );
+
+    border: 2px solid #725b3b;
+
+    color: #e6d1a6;
+
+    cursor: pointer;
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    transition: 0.15s;
+}
+
+.category:hover {
+    background:
+        linear-gradient(
+            #604a30,
+            #33271d
+        );
+
+    border-color: #c29b5c;
+
+    transform: translateY(-3px);
+}
+
+.category.active {
+    background:
+        linear-gradient(
+            #735a38,
+            #3b2d1e
+        );
+
+    border-color: #d5b16d;
+}
+
+.icon {
+    font-size: 29px;
+    margin-bottom: 6px;
+}
+
+.category-name {
+    font-size: 11px;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+/* =========================================================
+   BUILDING OPTIONS
+========================================================= */
+
+.options-panel {
+    position: absolute;
+
+    left: 50%;
+    bottom: 175px;
+
+    transform: translateX(-50%);
+
+    width: 900px;
+
+    min-height: 170px;
+
+    background: rgba(24,19,14,0.97);
+
+    border: 2px solid #80643d;
+
+    padding: 14px;
+
+    display: none;
+
+    z-index: 1001;
+}
+
+.options-panel.show {
+    display: block;
+}
+
+.options-title {
+    font-size: 18px;
+
+    color: #e8cf9e;
+
+    margin-bottom: 11px;
+
+    border-bottom: 1px solid #60492d;
+
+    padding-bottom: 7px;
+}
+
+.building-options {
+    display: grid;
+
+    grid-template-columns: repeat(5, 1fr);
+
+    gap: 9px;
+}
+
+.building {
+    background: #30261c;
+
+    border: 1px solid #695238;
+
+    padding: 11px 5px;
+
+    text-align: center;
+
+    cursor: pointer;
+}
+
+.building:hover {
+    background: #493724;
+
+    border-color: #b18a51;
+}
+
+.building-icon {
+    font-size: 28px;
+
+    margin-bottom: 5px;
+}
+
+.building-name {
+    font-size: 11px;
+
+    color: #dec79c;
+}
+
+.ornament {
+    text-align: center;
+
+    color: #9c7948;
+
+    margin-top: 4px;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 950px) {
+
+    .building-menu,
+    .options-panel {
+        width: 95%;
+    }
+
+    .categories {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+
+    .settlement-hud {
+        width: 260px;
+    }
+
+    .categories {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+</style>
+</head>
+
+<body>
+
+<!-- =====================================================
+     TOP LEFT SETTLEMENT INFORMATION
+===================================================== -->
+
+<div class="settlement-hud">
+
+    <div class="hud-title">
+        🏰 Settlement
+    </div>
+
+    <!-- Approval -->
+    <div class="stat">
+
+        <div class="stat-icon">👍</div>
+
+        <div class="stat-info">
+            <div class="stat-name">Settlement Approval</div>
+            <div class="stat-value">87%</div>
+        </div>
+
+        <div class="tooltip">
+            <div class="tooltip-title">Settlement Approval</div>
+            Overall approval of the settlement.
+            Higher approval improves immigration
+            and reduces the chance of families leaving.
+        </div>
+
+    </div>
+
+
+    <!-- Families -->
+    <div class="stat">
+
+        <div class="stat-icon">👨‍👩‍👧</div>
+
+        <div class="stat-info">
+            <div class="stat-name">Families</div>
+            <div class="stat-value" id="families">126</div>
+        </div>
+
+        <div class="tooltip">
+
+            <div class="tooltip-title">
+                Families & Housing
+            </div>
+
+            Total Families:
+            <strong id="tipFamilies">126</strong>
+            <br>
+
+            Free Families:
+            <strong id="tipFreeFamilies">0</strong>
+            <br>
+
+            Occupied Homes:
+            <strong id="tipOccupiedHomes">126</strong>
+            <br>
+
+            Empty Homes:
+            <strong id="tipEmptyHomes">14</strong>
+            <br><br>
+
+            Each house can hold exactly
+            <strong>1 family</strong>.
+
+        </div>
+
+    </div>
+
+
+    <!-- Villagers -->
+    <div class="stat">
+
+        <div class="stat-icon">👥</div>
+
+        <div class="stat-info">
+            <div class="stat-name">Villagers</div>
+            <div class="stat-value">482</div>
+        </div>
+
+        <div class="tooltip">
+            <div class="tooltip-title">Villagers</div>
+            Total population currently living
+            in the settlement.
+        </div>
+
+    </div>
+
+
+    <!-- Treasury -->
+    <div class="stat">
+
+        <div class="stat-icon">💰</div>
+
+        <div class="stat-info">
+            <div class="stat-name">Treasury</div>
+            <div class="stat-value">1,250 GC</div>
+        </div>
+
+        <div class="tooltip">
+            <div class="tooltip-title">Treasury</div>
+            Available settlement funds:
+            <strong>1,250 GC</strong>.
+            <br><br>
+            Used for construction, wages,
+            trade and other expenses.
+        </div>
+
+    </div>
+
+
+    <!-- Animals -->
+    <div class="stat">
+
+        <div class="stat-icon">🐄</div>
+
+        <div class="stat-info">
+            <div class="stat-name">Animals</div>
+            <div class="stat-value">96</div>
+        </div>
+
+        <div class="tooltip">
+            <div class="tooltip-title">Animals</div>
+            Total livestock:
+            <br>
+            Cattle: 34
+            <br>
+            Sheep: 42
+            <br>
+            Pigs: 20
+        </div>
+
+    </div>
+
+
+    <!-- Food -->
+    <div class="stat">
+
+        <div class="stat-icon">🌾</div>
+
+        <div class="stat-info">
+            <div class="stat-name">Food</div>
+            <div class="stat-value">8 months</div>
+        </div>
+
+        <div class="tooltip">
+            <div class="tooltip-title">Food Supply</div>
+
+            Current supply:
+            <strong>8 months</strong>
+            <br><br>
+
+            This estimate is based on current
+            population and food consumption.
+            <br><br>
+
+            Hovering over this indicator can
+            show a more detailed food breakdown.
+        </div>
+
+    </div>
+
+
+    <!-- Firewood -->
+    <div class="stat">
+
+        <div class="stat-icon">🪵</div>
+
+        <div class="stat-info">
+            <div class="stat-name">Firewood</div>
+            <div class="stat-value">5 months</div>
+        </div>
+
+        <div class="tooltip">
+            <div class="tooltip-title">Firewood Supply</div>
+
+            Current supply:
+            <strong>5 months</strong>
+            <br><br>
+
+            Consumption changes depending on
+            settlement population and season.
+        </div>
+
+    </div>
+
+
+    <!-- Charcoal -->
+    <div class="stat">
+
+        <div class="stat-icon">⚫</div>
+
+        <div class="stat-info">
+            <div class="stat-name">Charcoal</div>
+            <div class="stat-value">3 months</div>
+        </div>
+
+        <div class="tooltip">
+            <div class="tooltip-title">Charcoal Supply</div>
+
+            Current supply:
+            <strong>3 months</strong>
+            <br><br>
+
+            Mainly consumed by industrial
+            buildings such as forges and
+            blacksmiths.
+        </div>
+
+    </div>
+
+
+    <!-- RESOURCE SECTION -->
+
+    <div class="resource-title">
+        RESOURCES
+    </div>
+
+
+    <div class="resource">
+        <span class="resource-icon">🪵</span>
+        <span class="resource-name">Logs</span>
+        <span class="resource-amount">250</span>
+    </div>
+
+    <div class="resource">
+        <span class="resource-icon">🪚</span>
+        <span class="resource-name">Planks</span>
+        <span class="resource-amount">180</span>
+    </div>
+
+    <div class="resource">
+        <span class="resource-icon">🪨</span>
+        <span class="resource-name">Uncut Stone</span>
+        <span class="resource-amount">320</span>
+    </div>
+
+    <div class="resource">
+        <span class="resource-icon">⬜</span>
+        <span class="resource-name">Stone</span>
+        <span class="resource-amount">150</span>
+    </div>
+
+    <div class="resource">
+        <span class="resource-icon">⚒️</span>
+        <span class="resource-name">Tools</span>
+        <span class="resource-amount">75</span>
+    </div>
+
+    <div class="resource">
+        <span class="resource-icon">🏺</span>
+        <span class="resource-name">Clay</span>
+        <span class="resource-amount">210</span>
+    </div>
+
+    <div class="resource">
+        <span class="resource-icon">🧱</span>
+        <span class="resource-name">Roof Tiles</span>
+        <span class="resource-amount">120</span>
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     BUILDING OPTIONS
+===================================================== -->
+
+<div id="optionsPanel" class="options-panel">
+
+    <div id="optionsTitle" class="options-title">
+        Select a category
+    </div>
+
+    <div id="buildingOptions" class="building-options"></div>
+
+</div>
+
+
+<!-- =====================================================
+     BOTTOM BUILDING MENU
+===================================================== -->
+
+<div class="building-menu">
+
+    <div class="menu-title">
+        ⚔ Medieval Building Menu ⚔
+    </div>
+
+    <div class="categories">
+
+        <div class="category"
+             onclick="openCategory('industry', this)">
+            <div class="icon">⚒</div>
+            <div class="category-name">Industry</div>
+        </div>
+
+        <div class="category"
+             onclick="openCategory('residential', this)">
+            <div class="icon">🏠</div>
+            <div class="category-name">Residential</div>
+        </div>
+
+        <div class="category"
+             onclick="openCategory('customization', this)">
+            <div class="icon">🛠</div>
+            <div class="category-name">Customization</div>
+        </div>
+
+        <div class="category"
+             onclick="openCategory('agriculture', this)">
+            <div class="icon">🌾</div>
+            <div class="category-name">Agriculture</div>
+        </div>
+
+        <div class="category"
+             onclick="openCategory('castle', this)">
+            <div class="icon">🏰</div>
+            <div class="category-name">Castle</div>
+        </div>
+
+        <div class="category"
+             onclick="openCategory('military', this)">
+            <div class="icon">⚔</div>
+            <div class="category-name">Military</div>
+        </div>
+
+        <div class="category"
+             onclick="openCategory('infrastructure', this)">
+            <div class="icon">🛣</div>
+            <div class="category-name">Infrastructure</div>
+        </div>
+
+    </div>
+
+    <div class="ornament">
+        ◆ ───────────── ◆
+    </div>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   BUILDING CATEGORIES
+========================================================= */
+
+const categories = {
+
+    industry: {
+        name: "Industry",
+        buildings: [
+            ["⚒", "Blacksmith"],
+            ["🪵", "Sawmill"],
+            ["⛏", "Stonecutter"],
+            ["🔥", "Forge"],
+            ["🏭", "Workshop"]
+        ]
+    },
+
+    residential: {
+        name: "Residential",
+        buildings: [
+            ["🏠", "Peasant House"],
+            ["🏡", "Cottage"],
+            ["🏘", "Townhouse"],
+            ["🏰", "Manor House"],
+            ["🏛", "Noble Residence"]
+        ]
+    },
+
+    customization: {
+        name: "Customization",
+        buildings: [
+            ["🌳", "Trees"],
+            ["🌲", "Pine Trees"],
+            ["🪨", "Rocks"],
+            ["🌿", "Bushes"],
+            ["⛲", "Decoration"]
+        ]
+    },
+
+    agriculture: {
+        name: "Agriculture",
+        buildings: [
+            ["🌾", "Wheat Field"],
+            ["🥕", "Vegetable Field"],
+            ["🐄", "Cattle Farm"],
+            ["🐑", "Sheep Farm"],
+            ["🌻", "Herb Garden"]
+        ]
+    },
+
+    castle: {
+        name: "Castle & Settlement",
+        buildings: [
+            ["🏰", "Castle Keep"],
+            ["🧱", "Castle Wall"],
+            ["🚪", "Gatehouse"],
+            ["🗼", "Watchtower"],
+            ["🏘", "Settlement Centre"]
+        ]
+    },
+
+    military: {
+        name: "Military",
+        buildings: [
+            ["⚔", "Barracks"],
+            ["🏹", "Archery Range"],
+            ["🐎", "Stable"],
+            ["🛡", "Armoury"],
+            ["⚔", "Training Yard"]
+        ]
+    },
+
+    infrastructure: {
+        name: "Infrastructure",
+        buildings: [
+            ["🛣", "Road"],
+            ["🌉", "Bridge"],
+            ["🚰", "Well"],
+            ["📦", "Storage"],
+            ["🏪", "Market"]
+        ]
+    }
+
+};
+
+
+/* =========================================================
+   OPEN BUILDING CATEGORY
+========================================================= */
+
+function openCategory(category, element) {
+
+    document.querySelectorAll(".category")
+        .forEach(button =>
+            button.classList.remove("active")
+        );
+
+    element.classList.add("active");
+
+    const data = categories[category];
+
+    document.getElementById("optionsTitle").innerText =
+        data.name;
+
+    const container =
+        document.getElementById("buildingOptions");
+
+    container.innerHTML = "";
+
+    data.buildings.forEach(building => {
+
+        const div = document.createElement("div");
+
+        div.className = "building";
+
+        div.innerHTML = `
+            <div class="building-icon">
+                ${building[0]}
+            </div>
+
+            <div class="building-name">
+                ${building[1]}
+            </div>
+        `;
+
+        div.onclick = () => {
+            alert("Selected: " + building[1]);
+        };
+
+        container.appendChild(div);
+
+    });
+
+    document
+        .getElementById("optionsPanel")
+        .classList.add("show");
+}
+
+
+/* =========================================================
+   FAMILY DATA
+   1 HOUSE = 1 FAMILY
+========================================================= */
+
+let settlement = {
+
+    families: 126,
+
+    houses: 140,
+
+    occupiedHomes: 126,
+
+    freeFamilies: 0
+
+};
+
+
+/* =========================================================
+   UPDATE FAMILY INFORMATION
+========================================================= */
+
+function updateFamilies() {
+
+    settlement.occupiedHomes =
+        Math.min(
+            settlement.families,
+            settlement.houses
+        );
+
+    settlement.freeFamilies =
+        Math.max(
+            0,
+            settlement.families -
+            settlement.houses
+        );
+
+    const emptyHomes =
+        Math.max(
+            0,
+            settlement.houses -
+            settlement.families
+        );
+
+    document.getElementById("families").innerText =
+        settlement.families;
+
+    document.getElementById("tipFamilies").innerText =
+        settlement.families;
+
+    document.getElementById("tipFreeFamilies").innerText =
+        settlement.freeFamilies;
+
+    document.getElementById("tipOccupiedHomes").innerText =
+        settlement.occupiedHomes;
+
+    document.getElementById("tipEmptyHomes").innerText =
+        emptyHomes;
+}
+
+
