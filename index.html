@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lords of Castles</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: Georgia, "Times New Roman", serif;
+    color: #ead8b2;
+    background:
+      radial-gradient(circle at center, #4b4638 0%, #25231d 55%, #14120f 100%);
+  }
+  .wrap {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 56px 24px 80px;
+  }
+  h1 {
+    font-size: 52px;
+    letter-spacing: 2px;
+    margin: 0 0 8px;
+    text-shadow: 0 2px 8px rgba(0,0,0,.6);
+  }
+  .subtitle {
+    font-style: italic;
+    color: #b9a779;
+    margin: 0 0 40px;
+    font-size: 18px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 18px;
+  }
+  a.card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    padding: 22px 20px;
+    border: 1px solid #5a4f3c;
+    border-radius: 8px;
+    background: linear-gradient(180deg, rgba(74,66,52,.55), rgba(40,35,26,.55));
+    transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+  }
+  a.card:hover {
+    transform: translateY(-3px);
+    border-color: #c9a84a;
+    box-shadow: 0 8px 22px rgba(0,0,0,.45);
+  }
+  .card .name {
+    font-size: 19px;
+    font-weight: bold;
+    margin-bottom: 6px;
+  }
+  .card .tag {
+    font-size: 13px;
+    color: #9c8c66;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+  }
+  footer {
+    margin-top: 48px;
+    color: #7a6c4d;
+    font-size: 13px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Lords of Castles</h1>
+    <p class="subtitle">A medieval settlement &amp; kingdom builder — interactive prototypes</p>
+    <div class="grid">
+      <a class="card" href="Terrain%20generation%20HTML"><div class="name">Terrain Generation</div><div class="tag">World / Map</div></a>
+      <a class="card" href="Backyard%20Extensions%20HTML"><div class="name">Backyard Extensions</div><div class="tag">Production</div></a>
+      <a class="card" href="Building%20menu"><div class="name">Building Menu</div><div class="tag">Construction</div></a>
+      <a class="card" href="Placement"><div class="name">Placement</div><div class="tag">Construction</div></a>
+      <a class="card" href="Structure%20Rotation"><div class="name">Structure Rotation</div><div class="tag">Construction</div></a>
+      <a class="card" href="Calendar%20and%20Seasons"><div class="name">Calendar &amp; Seasons</div><div class="tag">Time</div></a>
+      <a class="card" href="Militia%20Requirements"><div class="name">Militia Requirements</div><div class="tag">Military</div></a>
+      <a class="card" href="AI%20Adverseries"><div class="name">AI Adversaries</div><div class="tag">Military</div></a>
+      <a class="card" href="Construction%20logic%20C%2B%2B%20and%20HTML"><div class="name">Construction Logic</div><div class="tag">Reference</div></a>
+      <a class="card" href="visable"><div class="name">Settlement HUD</div><div class="tag">Interface</div></a>
+    </div>
+    <footer>Served from source · Lords of Castles</footer>
+  </div>
+</body>
+</html>
