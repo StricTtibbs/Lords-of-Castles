@@ -1,0 +1,357 @@
+# ============================================================
+# VILLAGE FAMILY ARRIVAL SYSTEM
+# ============================================================
+
+import random
+from dataclasses import dataclass
+
+
+# ============================================================
+# FAMILY
+# ============================================================
+
+@dataclass
+class Family:
+    family_id: int
+    adults: int
+    children: int
+    wealth: int
+    name: str
+
+    @property
+    def population(self):
+        return self.adults + self.children
+
+
+# ============================================================
+# VILLAGE
+# ============================================================
+
+class Village:
+
+    def __init__(self):
+
+        self.approval = 50.0
+
+        # Houses currently built
+        self.total_houses = 5
+
+        # Houses occupied by families
+        self.occupied_houses = 5
+
+        # Families currently living in village
+        self.families = []
+
+        # Family numbering
+        self.next_family_id = 1
+
+        # Possible family names
+        self.family_names = [
+            "Aldric",
+            "Bram",
+            "Edwin",
+            "Godwin",
+            "Harald",
+            "Oswin",
+            "Rowan",
+            "Alric",
+            "Eadric",
+            "Leofric"
+        ]
+
+
+    # ========================================================
+    # AVAILABLE HOUSES
+    # ========================================================
+
+    def spare_houses(self):
+
+        return (
+            self.total_houses -
+            self.occupied_houses
+        )
+
+
+    # ========================================================
+    # CREATE FAMILY
+    # ========================================================
+
+    def create_family(self):
+
+        adults = random.choice([
+            2,
+            2,
+            2,
+            3
+        ])
+
+        children = random.randint(
+            0,
+            4
+        )
+
+        wealth = random.randint(
+            5,
+            25
+        )
+
+        name = random.choice(
+            self.family_names
+        )
+
+        family = Family(
+            family_id=self.next_family_id,
+            adults=adults,
+            children=children,
+            wealth=wealth,
+            name=name
+        )
+
+        self.next_family_id += 1
+
+        return family
+
+
+    # ========================================================
+    # FAMILY ARRIVAL
+    # ========================================================
+
+    def check_for_new_family(self):
+
+        # ----------------------------------------------
+        # APPROVAL REQUIREMENT
+        # ----------------------------------------------
+
+        if self.approval <= 65.0:
+
+            print(
+                "No new families arrived."
+            )
+
+            print(
+                f"Village approval: "
+                f"{self.approval:.1f}%"
+            )
+
+            print(
+                "Approval must be above 65%."
+            )
+
+            return False
+
+
+        # ----------------------------------------------
+        # HOUSE REQUIREMENT
+        # ----------------------------------------------
+
+        if self.spare_houses() <= 0:
+
+            print(
+                "No new families arrived."
+            )
+
+            print(
+                "There are no spare houses."
+            )
+
+            return False
+
+
+        # ----------------------------------------------
+        # ARRIVAL CHANCE
+        # ----------------------------------------------
+
+        arrival_chance = (
+            self.approval - 65.0
+        ) / 35.0
+
+        arrival_chance = max(
+            0.0,
+            min(
+                arrival_chance,
+                1.0
+            )
+        )
+
+
+        if random.random() > arrival_chance:
+
+            print(
+                "A family considered moving "
+                "to the village but did not arrive."
+            )
+
+            return False
+
+
+        # ----------------------------------------------
+        # FAMILY ARRIVES
+        # ----------------------------------------------
+
+        family = self.create_family()
+
+        self.families.append(
+            family
+        )
+
+        self.occupied_houses += 1
+
+
+        print(
+            "\nNEW FAMILY ARRIVED"
+        )
+
+        print(
+            f"Family: {family.name}"
+        )
+
+        print(
+            f"Adults: {family.adults}"
+        )
+
+        print(
+            f"Children: {family.children}"
+        )
+
+        print(
+            f"Total people: {family.population}"
+        )
+
+        print(
+            f"Houses remaining: "
+            f"{self.spare_houses()}"
+        )
+
+        return True
+
+
+    # ========================================================
+    # BUILD HOUSE
+    # ========================================================
+
+    def build_house(self):
+
+        self.total_houses += 1
+
+        print(
+            "\nA new house has been completed."
+        )
+
+        print(
+            f"Total houses: "
+            f"{self.total_houses}"
+        )
+
+        print(
+            f"Spare houses: "
+            f"{self.spare_houses()}"
+        )
+
+
+    # ========================================================
+    # CHANGE APPROVAL
+    # ========================================================
+
+    def change_approval(
+        self,
+        amount
+    ):
+
+        self.approval += amount
+
+        self.approval = max(
+            0.0,
+            min(
+                100.0,
+                self.approval
+            )
+        )
+
+        print(
+            f"Village approval is now "
+            f"{self.approval:.1f}%"
+        )
+
+
+    # ========================================================
+    # VILLAGE STATUS
+    # ========================================================
+
+    def status(self):
+
+        population = sum(
+            family.population
+            for family in self.families
+        )
+
+        print("\n========== VILLAGE ==========")
+
+        print(
+            f"Approval: {self.approval:.1f}%"
+        )
+
+        print(
+            f"Houses: {self.total_houses}"
+        )
+
+        print(
+            f"Occupied: {self.occupied_houses}"
+        )
+
+        print(
+            f"Spare: {self.spare_houses()}"
+        )
+
+        print(
+            f"Families: {len(self.families)}"
+        )
+
+        print(
+            f"Population: {population}"
+        )
+
+        print(
+            "============================\n"
+        )
+
+
+# ============================================================
+# EXAMPLE GAME
+# ============================================================
+
+if __name__ == "__main__":
+
+    village = Village()
+
+    # Starting five families
+    for _ in range(5):
+
+        family = village.create_family()
+
+        village.families.append(
+            family
+        )
+
+
+    # Build three additional houses
+    village.build_house()
+    village.build_house()
+    village.build_house()
+
+
+    # Raise approval above the required threshold
+    village.change_approval(
+        20
+    )
+
+
+    village.status()
+
+
+    # Check whether families want to arrive
+    for _ in range(10):
+
+        village.check_for_new_family()
+
+
+    village.status()
