@@ -1,0 +1,110 @@
+// MedievalMainMenuWidget.cpp
+
+#include "MedievalMainMenuWidget.h"
+
+#include "Components/Button.h"
+#include "Kismet/GameplayStatics.h"
+#include "GameFramework/PlayerController.h"
+
+void UMedievalMainMenuWidget::NativeConstruct()
+{
+    Super::NativeConstruct();
+
+    if (NewGameButton)
+    {
+        NewGameButton->OnClicked.AddDynamic(
+            this,
+            &UMedievalMainMenuWidget::OnNewGameClicked
+        );
+    }
+
+    if (LoadGameButton)
+    {
+        LoadGameButton->OnClicked.AddDynamic(
+            this,
+            &UMedievalMainMenuWidget::OnLoadGameClicked
+        );
+    }
+
+    if (SettingsButton)
+    {
+        SettingsButton->OnClicked.AddDynamic(
+            this,
+            &UMedievalMainMenuWidget::OnSettingsClicked
+        );
+    }
+
+    if (QuitButton)
+    {
+        QuitButton->OnClicked.AddDynamic(
+            this,
+            &UMedievalMainMenuWidget::OnQuitClicked
+        );
+    }
+}
+
+void UMedievalMainMenuWidget::OpenMainMenu()
+{
+    AddToViewport();
+
+    APlayerController* PC = GetWorld()->GetFirstPlayerController();
+
+    if (PC)
+    {
+        PC->bShowMouseCursor = true;
+
+        FInputModeUIOnly InputMode;
+
+        InputMode.SetWidgetToFocus(TakeWidget());
+
+        PC->SetInputMode(InputMode);
+    }
+}
+
+void UMedievalMainMenuWidget::OnNewGameClicked()
+{
+    // Opens your map-selection screen.
+
+    UGameplayStatics::OpenLevel(
+        this,
+        FName("MapSelection")
+    );
+}
+
+void UMedievalMainMenuWidget::OnLoadGameClicked()
+{
+    // Replace this later with your save-game system.
+
+    UE_LOG(
+        LogTemp,
+        Log,
+        TEXT("Load Game selected")
+    );
+}
+
+void UMedievalMainMenuWidget::OnSettingsClicked()
+{
+    // Replace this later with your settings widget.
+
+    UE_LOG(
+        LogTemp,
+        Log,
+        TEXT("Settings selected")
+    );
+}
+
+void UMedievalMainMenuWidget::OnQuitClicked()
+{
+    APlayerController* PC = GetWorld()->GetFirstPlayerController();
+
+    if (PC)
+    {
+        UKismetSystemLibrary::QuitGame(
+            this,
+            PC,
+            EQuitPreference::Quit,
+            false
+        );
+    }
+}
+#include "Kismet/KismetSystemLibrary.h"
