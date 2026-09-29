@@ -1,0 +1,48 @@
+// MedievalMainMenuWidget.h
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Blueprint/UserWidget.h"
+#include "MedievalMainMenuWidget.generated.h"
+
+class UButton;
+class UTextBlock;
+
+UCLASS()
+class YOURGAME_API UMedievalMainMenuWidget : public UUserWidget
+{
+    GENERATED_BODY()
+
+protected:
+
+    virtual void NativeConstruct() override;
+
+    UPROPERTY(meta = (BindWidget))
+    UButton* NewGameButton;
+
+    UPROPERTY(meta = (BindWidget))
+    UButton* LoadGameButton;
+
+    UPROPERTY(meta = (BindWidget))
+    UButton* SettingsButton;
+
+    UPROPERTY(meta = (BindWidget))
+    UButton* QuitButton;
+
+    UFUNCTION()
+    void OnNewGameClicked();
+
+    UFUNCTION()
+    void OnLoadGameClicked();
+
+    UFUNCTION()
+    void OnSettingsClicked();
+
+    UFUNCTION()
+    void OnQuitClicked();
+
+public:
+
+    void OpenMainMenu();
+};
