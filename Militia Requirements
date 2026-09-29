@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Medieval Settlement — Militia</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    user-select:none;
+}
+
+html,body{
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#171713;
+    font-family:Georgia,"Times New Roman",serif;
+}
+
+#game{
+    width:100vw;
+    height:100vh;
+    position:relative;
+    overflow:hidden;
+    background:
+        radial-gradient(
+            circle at 50% 40%,
+            #71865b,
+            #43553a
+        );
+}
+
+/* =========================================================
+   TERRAIN
+========================================================= */
+
+#terrain{
+    position:absolute;
+    width:160%;
+    height:160%;
+    left:-30%;
+    top:-30%;
+
+    background:
+        radial-gradient(
+            ellipse at 30% 40%,
+            rgba(130,150,90,.5),
+            transparent 25%
+        ),
+        radial-gradient(
+            ellipse at 70% 60%,
+            rgba(60,80,45,.5),
+            transparent 30%
+        ),
+        linear-gradient(
+            135deg,
+            #70865a,
+            #526a46
+        );
+}
+
+/* =========================================================
+   PEOPLE
+========================================================= */
+
+.person{
+    position:absolute;
+
+    width:34px;
+    height:74px;
+
+    transform:
+        translate(-50%,-50%);
+
+    z-index:30;
+
+    cursor:pointer;
+}
+
+.person:hover{
+    filter:
+        brightness(1.2)
+        drop-shadow(
+            0 3px 5px rgba(0,0,0,.7)
+        );
+}
+
+/* head */
+
+.head{
+    position:absolute;
+
+    left:9px;
+    top:0;
+
+    width:16px;
+    height:18px;
+
+    border-radius:
+        45% 45% 48% 48%;
+
+    background:
+        radial-gradient(
+            circle at 35% 30%,
+            #d8a878,
+            #a66d43 75%
+        );
+
+    box-shadow:
+        1px 2px 3px
+        rgba(0,0,0,.45);
+}
+
+/* hair */
+
+.hair{
+    position:absolute;
+
+    left:7px;
+    top:-2px;
+
+    width:20px;
+    height:9px;
+
+    border-radius:
+        50% 50% 20% 20%;
+
+    background:
+        #493321;
+}
+
+/* body */
+
+.body{
+    position:absolute;
+
+    left:7px;
+    top:17px;
+
+    width:20px;
+    height:31px;
+
+    border-radius:
+        5px 5px 3px 3px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #766049,
+            #9c815f,
+            #65503b
+        );
+
+    box-shadow:
+        1px 3px 4px
+        rgba(0,0,0,.35);
+}
+
+/* arms */
+
+.arm{
+    position:absolute;
+
+    width:7px;
+    height:29px;
+
+    top:20px;
+
+    border-radius:4px;
+
+    background:#98704d;
+}
+
+.arm.left{
+    left:2px;
+    transform:rotate(8deg);
+}
+
+.arm.right{
+    right:2px;
+    transform:rotate(-8deg);
+}
+
+/* legs */
+
+.leg{
+    position:absolute;
+
+    top:46px;
+
+    width:8px;
+    height:25px;
+
+    background:
+        #514335;
+
+    border-radius:3px;
+}
+
+.leg.left{
+    left:7px;
+}
+
+.leg.right{
+    right:7px;
+}
+
+/* =========================================================
+   MILITIA EQUIPMENT
+========================================================= */
+
+.militia .body{
+    background:
+        linear-gradient(
+            90deg,
+            #574d3e,
+            #80735c,
+            #4c4437
+        );
+
+    border:
+        1px solid #3d392f;
+}
+
+/* shield */
+
+.shield{
+    position:absolute;
+
+    width:18px;
+    height:25px;
+
+    right:-12px;
+    top:23px;
+
+    border-radius:
+        4px 4px 9px 9px;
+
+    background:
+        radial-gradient(
+            circle,
+            #a28b5b 0 9%,
+            #51452f 10% 100%
+        );
+
+    border:
+        2px solid #332b20;
+
+    box-shadow:
+        2px 3px 4px
+        rgba(0,0,0,.5);
+}
+
+/* spear */
+
+.spear{
+    position:absolute;
+
+    width:2px;
+    height:54px;
+
+    right:-17px;
+    top:4px;
+
+    background:#5b3b22;
+
+    transform:
+        rotate(-10deg);
+
+    transform-origin:
+        bottom center;
+}
+
+.spear::before{
+    content:"";
+
+    position:absolute;
+
+    top:-5px;
+    left:-3px;
+
+    width:8px;
+    height:11px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #b9b5a4,
+            #57554d
+        );
+
+    clip-path:
+        polygon(
+            50% 0,
+            100% 100%,
+            50% 78%,
+            0 100%
+        );
+}
+
+/* =========================================================
+   FAMILY PANELS
+========================================================= */
+
+#families{
+    position:absolute;
+
+    top:20px;
+    left:20px;
+
+    width:365px;
+
+    z-index:100;
+
+    background:
+        rgba(22,21,18,.94);
+
+    border:
+        1px solid #b49a60;
+
+    box-shadow:
+        0 5px 20px rgba(0,0,0,.7);
+
+    padding:14px;
+
+    color:#eee;
+}
+
+#families h1{
+    margin:0 0 5px;
+
+    color:#e6d097;
+
+    font-size:20px;
+}
+
+#families .subtitle{
+    color:#aaa;
+
+    font-size:12px;
+
+    margin-bottom:12px;
+}
+
+.family{
+    position:relative;
+
+    padding:10px;
+
+    margin-bottom:7px;
+
+    background:#302e27;
+
+    border:
+        1px solid #5d5037;
+}
+
+.family.enlisted{
+    background:#3b392e;
+
+    border-color:#a78b52;
+}
+
+.familyTitle{
+    color:#e2ca8a;
+
+    font-weight:bold;
+}
+
+.familyInfo{
+    color:#bbb;
+
+    font-size:11px;
+
+    margin-top:3px;
+}
+
+.enlistButton{
+    position:absolute;
+
+    right:8px;
+    top:10px;
+
+    background:#51452e;
+
+    color:#eee;
+
+    border:
+        1px solid #9b814e;
+
+    padding:6px 8px;
+
+    cursor:pointer;
+
+    font-family:inherit;
+}
+
+.enlistButton:hover{
+    background:#685736;
+}
+
+.enlistButton:disabled{
+    opacity:.45;
+    cursor:default;
+}
+
+/* =========================================================
+   EQUIPMENT
+========================================================= */
+
+#equipment{
+    position:absolute;
+
+    top:20px;
+    right:20px;
+
+    width:285px;
+
+    z-index:100;
+
+    background:
+        rgba(22,21,18,.94);
+
+    border:
+        1px solid #b49a60;
+
+    padding:14px;
+
+    color:#eee;
+}
+
+#equipment h2{
+    margin:0 0 10px;
+
+    color:#e6d097;
+
+    font-size:18px;
+}
+
+.equipmentRow{
+    padding:8px;
+
+    margin-bottom:6px;
+
+    background:#302e27;
+
+    border:
+        1px solid #514936;
+}
+
+.locked{
+    color:#777;
+}
+
+.available{
+    color:#d7c58f;
+}
+
+/* =========================================================
+   HUD
+========================================================= */
+
+#hud{
+    position:absolute;
+
+    bottom:20px;
+    left:50%;
+
+    transform:
+        translateX(-50%);
+
+    z-index:100;
+
+    min-width:460px;
+
+    padding:11px 18px;
+
+    background:
+        rgba(20,19,17,.92);
+
+    border:
+        1px solid #b49a60;
+
+    color:#ddd;
+
+    text-align:center;
+}
+
+#militiaCount{
+    color:#e5cb8b;
+
+    font-size:18px;
+}
+
+#status{
+    font-size:12px;
+
+    margin-top:4px;
+
+    color:#aaa;
+}
+
+/* =========================================================
+   CONTROLS
+========================================================= */
+
+#controls{
+    position:absolute;
+
+    left:20px;
+    bottom:20px;
+
+    z-index:100;
+
+    padding:9px 13px;
+
+    background:
+        rgba(20,19,17,.86);
+
+    border:
+        1px solid #806c47;
+
+    color:#ccc;
+
+    font-size:12px;
+
+    line-height:1.6;
+}
+
+#controls b{
+    color:#ddc482;
+}
+
+/* =========================================================
+   NOTIFICATION
+========================================================= */
+
+#message{
+    position:absolute;
+
+    top:20px;
+    left:50%;
+
+    transform:
+        translateX(-50%);
+
+    z-index:300;
+
+    display:none;
+
+    padding:9px 17px;
+
+    background:
+        rgba(20,19,17,.95);
+
+    border:
+        1px solid #b49a60;
+
+    color:#e8d398;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+    <div id="terrain"></div>
+
+
+    <!-- FAMILY PANEL -->
+
+    <div id="families">
+
+        <h1>Five Founding Families</h1>
+
+        <div class="subtitle">
+            One member of a family may serve in the militia.
+        </div>
+
+        <div class="family" id="family1">
+            <div class="familyTitle">
+                Family I — Alden
+            </div>
+            <div class="familyInfo">
+                4 members • 1 available for militia
+            </div>
+            <button class="enlistButton"
+                    onclick="enlist(1)">
+                Enlist
+            </button>
+        </div>
+
+        <div class="family" id="family2">
+            <div class="familyTitle">
+                Family II — Beran
+            </div>
+            <div class="familyInfo">
+                4 members • 1 available for militia
+            </div>
+            <button class="enlistButton"
+                    onclick="enlist(2)">
+                Enlist
+            </button>
+        </div>
+
+        <div class="family" id="family3">
+            <div class="familyTitle">
+                Family III — Corwin
+            </div>
+            <div class="familyInfo">
+                4 members • 1 available for militia
+            </div>
+            <button class="enlistButton"
+                    onclick="enlist(3)">
+                Enlist
+            </button>
+        </div>
+
+        <div class="family" id="family4">
+            <div class="familyTitle">
+                Family IV — Doran
+            </div>
+            <div class="familyInfo">
+                4 members • 1 available for militia
+            </div>
+            <button class="enlistButton"
+                    onclick="enlist(4)">
+                Enlist
+            </button>
+        </div>
+
+        <div class="family" id="family5">
+            <div class="familyTitle">
+                Family V — Eryn
+            </div>
+            <div class="familyInfo">
+                4 members • 1 available for militia
+            </div>
+            <button class="enlistButton"
+                    onclick="enlist(5)">
+                Enlist
+            </button>
+        </div>
+
+    </div>
+
+
+    <!-- EQUIPMENT -->
+
+    <div id="equipment">
+
+        <h2>Militia Equipment</h2>
+
+        <div class="equipmentRow available">
+            ⚔ Spear
+            <br>
+            <small>Required: 1</small>
+        </div>
+
+        <div class="equipmentRow available">
+            🛡 Shield
+            <br>
+            <small>Required: 1</small>
+        </div>
+
+        <div class="equipmentRow locked">
+            ⛑ Helmet
+            <br>
+            <small>Future equipment</small>
+        </div>
+
+        <div class="equipmentRow locked">
+            🧥 Mail Armour
+            <br>
+            <small>Future equipment</small>
+        </div>
+
+        <div class="equipmentRow locked">
+            🛡 Plate Armour
+            <br>
+            <small>Future equipment</small>
+        </div>
+
+        <div class="equipmentRow locked">
+            🐎 Horse
+            <br>
+            <small>Future cavalry equipment</small>
+        </div>
+
+    </div>
+
+
+    <!-- HUD -->
+
+    <div id="hud">
+
+        <div id="militiaCount">
+            Militia: 0 / 5
+        </div>
+
+        <div id="status">
+            Each militia member requires 1 spear and 1 shield.
+        </div>
+
+    </div>
+
+
+    <!-- CONTROLS -->
+
+    <div id="controls">
+
+        <b>W</b> Forward<br>
+        <b>A</b> Left<br>
+        <b>D</b> Right<br>
+        <b>C</b> Back<br>
+        <b>Q / E</b> Camera Rotation<br>
+        <b>R</b> Rotate Structure<br>
+        <b>M</b> Map
+
+    </div>
+
+
+    <div id="message"></div>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   MILITIA STATE
+========================================================= */
+
+const state = {
+
+    families:{
+
+        1:false,
+        2:false,
+        3:false,
+        4:false,
+        5:false
+
+    },
+
+    militia:0,
+
+    spears:10,
+
+    shields:10
+
+};
+
+
+/* =========================================================
+   ENLIST FAMILY MEMBER
+========================================================= */
+
+function enlist(family){
+
+    if(state.families[family]){
+
+        notify(
+            "A member of this family is already serving."
+        );
+
+        return;
+    }
+
+
+    if(state.spears < 1){
+
+        notify(
+            "You need 1 spear."
+        );
+
+        return;
+    }
+
+
+    if(state.shields < 1){
+
+        notify(
+            "You need 1 shield."
+        );
+
+        return;
+    }
+
+
+    /*
+        One family member joins.
+    */
+
+    state.families[family]=true;
+
+    state.militia++;
+
+    state.spears--;
+
+    state.shields--;
+
+
+    updateFamily(family);
+
+    updateMilitia();
+
+    createMilitiaPerson(family);
+
+    notify(
+        "One member of Family "+
+        family+
+        " joined the militia."
+    );
+
+}
+
+
+/* =========================================================
+   UPDATE FAMILY PANEL
+========================================================= */
+
+function updateFamily(id){
+
+    const family =
+        document.getElementById(
+            "family"+id
+        );
+
+    family.classList.add(
+        "enlisted"
+    );
+
+    const button =
+        family.querySelector(
+            ".enlistButton"
+        );
+
+    button.textContent=
+        "Serving";
+
+    button.disabled=true;
+
+
+    family.querySelector(
+        ".familyInfo"
+    ).textContent=
+        "One member serving • 3 family members remaining";
+
+}
+
+
+/* =========================================================
+   UPDATE MILITIA
+========================================================= */
+
+function updateMilitia(){
+
+    document.getElementById(
+        "militiaCount"
+    ).textContent=
+        "Militia: "+
+        state.militia+
+        " / 5";
+
+}
+
+
+/* =========================================================
+   CREATE 3D-STYLE MILITIAMAN
+========================================================= */
+
+function createMilitiaPerson(family){
+
+    const person =
+        document.createElement("div");
+
+    person.className=
+        "person militia";
+
+
+    person.style.left=
+        (42 + family*4)+
+        "%";
+
+    person.style.top=
+        (60 + (family%2)*5)+
+        "%";
+
+
+    const head =
+        document.createElement("div");
+
+    head.className="head";
+
+
+    const hair =
+        document.createElement("div");
+
+    hair.className="hair";
+
+
+    const body =
+        document.createElement("div");
+
+    body.className="body";
+
+
+    const arm1 =
+        document.createElement("div");
+
+    arm1.className=
+        "arm left";
+
+
+    const arm2 =
+        document.createElement("div");
+
+    arm2.className=
+        "arm right";
+
+
+    const leg1 =
+        document.createElement("div");
+
+    leg1.className=
+        "leg left";
+
+
+    const leg2 =
+        document.createElement("div");
+
+    leg2.className=
+        "leg right";
+
+
+    const shield =
+        document.createElement("div");
+
+    shield.className="shield";
+
+
+    const spear =
+        document.createElement("div");
+
+    spear.className="spear";
+
+
+    person.appendChild(head);
+
+    person.appendChild(hair);
+
+    person.appendChild(body);
+
+    person.appendChild(arm1);
+
+    person.appendChild(arm2);
+
+    person.appendChild(leg1);
+
+    person.appendChild(leg2);
+
+    person.appendChild(shield);
+
+    person.appendChild(spear);
+
+
+    terrain.appendChild(person);
+
+}
+
+
+/* =========================================================
+   MESSAGE
+========================================================= */
+
+let messageTimer;
+
+function notify(text){
+
+    const message =
+        document.getElementById(
+            "message"
+        );
+
+    message.textContent=text;
+
+    message.style.display=
+        "block";
+
+    clearTimeout(messageTimer);
+
+    messageTimer=
+        setTimeout(
+            ()=>{
+                message.style.display=
+                    "none";
+            },
+            2000
+        );
+
+}
+
+</script>
+
+</body>
+</html>
