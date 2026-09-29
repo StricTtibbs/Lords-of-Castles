@@ -1,0 +1,1488 @@
+// ============================================================
+// MedievalTreeSystem.h
+// HIGH-DETAIL PROCEDURAL MEDIEVAL TREE SYSTEM
+// Unreal Engine C++
+// ============================================================
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "Components/StaticMeshComponent.h"
+#include "Components/InstancedStaticMeshComponent.h"
+#include "Components/HierarchicalInstancedStaticMeshComponent.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "MedievalTreeSystem.generated.h"
+
+
+// ============================================================
+// TREE SPECIES
+// ============================================================
+
+UENUM(BlueprintType)
+enum class EMedievalTreeSpecies : uint8
+{
+    Oak,
+    EnglishOak,
+    Ash,
+    Beech,
+    Birch,
+    SilverBirch,
+    Hazel,
+    Willow,
+    Alder,
+    Maple,
+    Sycamore,
+    Elm,
+    Hawthorn,
+    Blackthorn,
+    Rowan,
+    Yew,
+    Pine,
+    ScotsPine,
+    Fir,
+    Spruce,
+    Cedar,
+    Apple,
+    Pear,
+    Cherry,
+    Chestnut,
+    Walnut
+};
+
+
+// ============================================================
+// TREE AGE
+// ============================================================
+
+UENUM(BlueprintType)
+enum class ETreeAge : uint8
+{
+    Sapling,
+    Young,
+    Mature,
+    Old,
+    Ancient
+};
+
+
+// ============================================================
+// TREE HEALTH
+// ============================================================
+
+UENUM(BlueprintType)
+enum class ETreeHealth : uint8
+{
+    Healthy,
+    Dry,
+    Diseased,
+    Damaged,
+    Dying,
+    Dead
+};
+
+
+// ============================================================
+// TREE SEASON
+// ============================================================
+
+UENUM(BlueprintType)
+enum class ETreeSeason : uint8
+{
+    Spring,
+    Summer,
+    Autumn,
+    Winter
+};
+
+
+// ============================================================
+// TREE FORM
+// ============================================================
+
+UENUM(BlueprintType)
+enum class ETreeGrowthForm : uint8
+{
+    Straight,
+    WideCanopy,
+    NarrowCanopy,
+    Drooping,
+    Conical,
+    Irregular,
+    MultiTrunk,
+    Orchard
+};
+
+
+// ============================================================
+// TREE WOOD DATA
+// ============================================================
+
+USTRUCT(BlueprintType)
+struct FTreeWoodProperties
+{
+    GENERATED_BODY()
+
+    // Wood gathered when tree is felled
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float LogYield = 5.0f;
+
+    // Quality of timber
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float TimberQuality = 1.0f;
+
+    // Hardness
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float WoodHardness = 1.0f;
+
+    // Density
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float WoodDensity = 1.0f;
+
+    // Suitability for construction
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float ConstructionValue = 1.0f;
+
+    // Suitability for firewood
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float FirewoodValue = 1.0f;
+};
+
+
+// ============================================================
+// TREE SIZE
+// ============================================================
+
+USTRUCT(BlueprintType)
+struct FTreeDimensions
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float MinimumHeight = 4.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float MaximumHeight = 20.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float MinimumTrunkRadius = 0.15f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float MaximumTrunkRadius = 0.80f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float MinimumCanopyRadius = 1.5f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float MaximumCanopyRadius = 8.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 MinimumBranches = 8;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 MaximumBranches = 80;
+};
+
+
+// ============================================================
+// BARK DATA
+// ============================================================
+
+USTRUCT(BlueprintType)
+struct FTreeBarkProperties
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FLinearColor BarkColour =
+        FLinearColor(0.25f, 0.15f, 0.08f);
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float BarkRoughness = 0.8f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float BarkVariation = 0.3f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float BarkCracking = 0.2f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float MossCoverage = 0.05f;
+};
+
+
+// ============================================================
+// LEAF DATA
+// ============================================================
+
+USTRUCT(BlueprintType)
+struct FTreeLeafProperties
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FLinearColor SpringColour =
+        FLinearColor(0.35f, 0.75f, 0.25f);
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FLinearColor SummerColour =
+        FLinearColor(0.20f, 0.55f, 0.15f);
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FLinearColor AutumnColour =
+        FLinearColor(0.75f, 0.30f, 0.05f);
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FLinearColor WinterColour =
+        FLinearColor(0.20f, 0.20f, 0.15f);
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float LeafDensity = 1.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float LeafSize = 1.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    bool bDropsLeaves = true;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    bool bEvergreen = false;
+};
+
+
+// ============================================================
+// BRANCH DATA
+// ============================================================
+
+USTRUCT(BlueprintType)
+struct FTreeBranchProperties
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 PrimaryBranches = 12;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 SecondaryBranches = 30;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 TertiaryBranches = 80;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float BranchAngleVariation = 35.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float BranchLengthVariation = 0.35f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float BranchThicknessVariation = 0.30f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float Curvature = 0.25f;
+};
+
+
+// ============================================================
+// ROOT DATA
+// ============================================================
+
+USTRUCT(BlueprintType)
+struct FTreeRootProperties
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float RootSpread = 2.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float RootDepth = 1.5f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 MajorRoots = 6;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 FineRoots = 40;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    bool bVisibleRoots = true;
+};
+
+
+// ============================================================
+// WIND RESPONSE
+// ============================================================
+
+USTRUCT(BlueprintType)
+struct FTreeWindProperties
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float WindStrength = 1.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float TrunkBend = 0.05f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float BranchMovement = 1.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float LeafMovement = 1.5f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float WindResistance = 0.5f;
+};
+
+
+// ============================================================
+// GROWTH DATA
+// ============================================================
+
+USTRUCT(BlueprintType)
+struct FTreeGrowthProperties
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float GrowthPerYear = 0.25f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float MaximumAge = 400.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float MatureAge = 30.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float AncientAge = 150.0f;
+};
+
+
+// ============================================================
+// COMPLETE SPECIES DATA
+// ============================================================
+
+USTRUCT(BlueprintType)
+struct FMedievalTreeSpeciesData
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    EMedievalTreeSpecies Species =
+        EMedievalTreeSpecies::Oak;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FName DisplayName = TEXT("Oak");
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    ETreeGrowthForm GrowthForm =
+        ETreeGrowthForm::WideCanopy;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FTreeDimensions Dimensions;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FTreeWoodProperties Wood;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FTreeBarkProperties Bark;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FTreeLeafProperties Leaves;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FTreeBranchProperties Branches;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FTreeRootProperties Roots;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FTreeWindProperties Wind;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FTreeGrowthProperties Growth;
+};
+
+
+// ============================================================
+// TREE INSTANCE
+// ============================================================
+
+UCLASS()
+class MEDIEVALGAME_API AMedievalTree
+    : public AActor
+{
+    GENERATED_BODY()
+
+public:
+
+    AMedievalTree();
+
+protected:
+
+    virtual void BeginPlay() override;
+
+public:
+
+    virtual void Tick(
+        float DeltaSeconds
+    ) override;
+
+
+    // ========================================================
+    // TREE COMPONENTS
+    // ========================================================
+
+    UPROPERTY(VisibleAnywhere)
+    USceneComponent* Root;
+
+    UPROPERTY(VisibleAnywhere)
+    UStaticMeshComponent* Trunk;
+
+    UPROPERTY(VisibleAnywhere)
+    UHierarchicalInstancedStaticMeshComponent*
+        Branches;
+
+    UPROPERTY(VisibleAnywhere)
+    UHierarchicalInstancedStaticMeshComponent*
+        Leaves;
+
+    UPROPERTY(VisibleAnywhere)
+    UHierarchicalInstancedStaticMeshComponent*
+        Roots;
+
+
+    // ========================================================
+    // TREE DATA
+    // ========================================================
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FMedievalTreeSpeciesData TreeData;
+
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    ETreeAge Age =
+        ETreeAge::Mature;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    ETreeHealth Health =
+        ETreeHealth::Healthy;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float TreeAgeYears = 35.0f;
+
+
+    // ========================================================
+    // PROCEDURAL GENERATION
+    // ========================================================
+
+    UFUNCTION(BlueprintCallable)
+    void GenerateTree();
+
+    UFUNCTION(BlueprintCallable)
+    void GenerateTrunk();
+
+    UFUNCTION(BlueprintCallable)
+    void GenerateBranches();
+
+    UFUNCTION(BlueprintCallable)
+    void GenerateRoots();
+
+    UFUNCTION(BlueprintCallable)
+    void GenerateLeaves();
+
+
+    // ========================================================
+    // SEASONS
+    // ========================================================
+
+    UFUNCTION(BlueprintCallable)
+    void ApplySeason(
+        ETreeSeason Season
+    );
+
+
+    // ========================================================
+    // GROWTH
+    // ========================================================
+
+    UFUNCTION(BlueprintCallable)
+    void GrowTree(
+        float Years
+    );
+
+
+    // ========================================================
+    // WIND
+    // ========================================================
+
+    UFUNCTION(BlueprintCallable)
+    void ApplyWind(
+        FVector WindDirection,
+        float WindStrength
+    );
+
+
+    // ========================================================
+    // RESOURCE HARVEST
+    // ========================================================
+
+    UFUNCTION(BlueprintCallable)
+    float FellTree();
+
+    UFUNCTION(BlueprintPure)
+    float GetLogYield() const;
+
+
+private:
+
+    void DetermineAge();
+
+    float GetTreeScale() const;
+
+    FVector GenerateBranchDirection(
+        int32 Index
+    ) const;
+};
+// ============================================================
+// MedievalTreeSystem.cpp
+// ============================================================
+
+#include "MedievalTreeSystem.h"
+#include "Engine/World.h"
+#include "Math/UnrealMathUtility.h"
+
+
+AMedievalTree::AMedievalTree()
+{
+    PrimaryActorTick.bCanEverTick = true;
+
+
+    // ========================================================
+    // ROOT
+    // ========================================================
+
+    Root =
+        CreateDefaultSubobject<USceneComponent>(
+            TEXT("TreeRoot")
+        );
+
+    SetRootComponent(Root);
+
+
+    // ========================================================
+    // TRUNK
+    // ========================================================
+
+    Trunk =
+        CreateDefaultSubobject<UStaticMeshComponent>(
+            TEXT("Trunk")
+        );
+
+    Trunk->SetupAttachment(Root);
+
+
+    // ========================================================
+    // BRANCHES
+    // ========================================================
+
+    Branches =
+        CreateDefaultSubobject<
+            UHierarchicalInstancedStaticMeshComponent
+        >(
+            TEXT("Branches")
+        );
+
+    Branches->SetupAttachment(Root);
+
+
+    // ========================================================
+    // LEAVES
+    // ========================================================
+
+    Leaves =
+        CreateDefaultSubobject<
+            UHierarchicalInstancedStaticMeshComponent
+        >(
+            TEXT("Leaves")
+        );
+
+    Leaves->SetupAttachment(Root);
+
+
+    // ========================================================
+    // ROOTS
+    // ========================================================
+
+    Roots =
+        CreateDefaultSubobject<
+            UHierarchicalInstancedStaticMeshComponent
+        >(
+            TEXT("Roots")
+        );
+
+    Roots->SetupAttachment(Root);
+}
+
+
+// ============================================================
+// BEGIN PLAY
+// ============================================================
+
+void AMedievalTree::BeginPlay()
+{
+    Super::BeginPlay();
+
+    GenerateTree();
+}
+
+
+// ============================================================
+// TICK
+// ============================================================
+
+void AMedievalTree::Tick(
+    float DeltaSeconds
+)
+{
+    Super::Tick(
+        DeltaSeconds
+    );
+
+
+    // Wind animation can be driven
+    // by materials for performance.
+
+    const float Time =
+        GetWorld()->GetTimeSeconds();
+
+
+    const float Wind =
+        FMath::Sin(Time * 0.7f) *
+        TreeData.Wind.BranchMovement;
+
+
+    FRotator Rotation =
+        FRotator(
+            Wind * 0.15f,
+            0.0f,
+            Wind * 0.08f
+        );
+
+
+    Branches->SetRelativeRotation(
+        Rotation
+    );
+}
+
+
+// ============================================================
+// COMPLETE GENERATION
+// ============================================================
+
+void AMedievalTree::GenerateTree()
+{
+    DetermineAge();
+
+    GenerateTrunk();
+
+    GenerateRoots();
+
+    GenerateBranches();
+
+    GenerateLeaves();
+}
+
+
+// ============================================================
+// TREE SCALE
+// ============================================================
+
+float AMedievalTree::GetTreeScale() const
+{
+    const float Minimum =
+        TreeData.Dimensions.MinimumHeight;
+
+    const float Maximum =
+        TreeData.Dimensions.MaximumHeight;
+
+    const float Height =
+        FMath::FRandRange(
+            Minimum,
+            Maximum
+        );
+
+    return Height / 10.0f;
+}
+
+
+// ============================================================
+// TRUNK
+// ============================================================
+
+void AMedievalTree::GenerateTrunk()
+{
+    if (!Trunk)
+        return;
+
+
+    const float Radius =
+        FMath::FRandRange(
+            TreeData.Dimensions.MinimumTrunkRadius,
+            TreeData.Dimensions.MaximumTrunkRadius
+        );
+
+
+    const float Height =
+        FMath::FRandRange(
+            TreeData.Dimensions.MinimumHeight,
+            TreeData.Dimensions.MaximumHeight
+        );
+
+
+    const float AgeMultiplier =
+        FMath::Clamp(
+            TreeAgeYears /
+            TreeData.Growth.MatureAge,
+            0.35f,
+            1.0f
+        );
+
+
+    Trunk->SetRelativeScale3D(
+        FVector(
+            Radius * AgeMultiplier,
+            Radius * AgeMultiplier,
+            Height
+        )
+    );
+}
+
+
+// ============================================================
+// BRANCHES
+// ============================================================
+
+void AMedievalTree::GenerateBranches()
+{
+    if (!Branches)
+        return;
+
+
+    Branches->ClearInstances();
+
+
+    const int32 Count =
+        FMath::RandRange(
+            TreeData.Dimensions.MinimumBranches,
+            TreeData.Dimensions.MaximumBranches
+        );
+
+
+    const float Height =
+        FMath::FRandRange(
+            TreeData.Dimensions.MinimumHeight,
+            TreeData.Dimensions.MaximumHeight
+        );
+
+
+    for (
+        int32 Index = 0;
+        Index < Count;
+        ++Index
+    )
+    {
+        const float HeightPercent =
+            FMath::FRandRange(
+                0.35f,
+                0.95f
+            );
+
+
+        const FVector Location(
+            0.0f,
+            0.0f,
+            Height *
+            HeightPercent
+        );
+
+
+        const FVector Direction =
+            GenerateBranchDirection(
+                Index
+            );
+
+
+        FRotator Rotation =
+            Direction.Rotation();
+
+
+        Rotation.Pitch +=
+            FMath::FRandRange(
+                -15.0f,
+                15.0f
+            );
+
+
+        const float Length =
+            FMath::FRandRange(
+                0.5f,
+                2.5f
+            );
+
+
+        FTransform Transform;
+
+        Transform.SetLocation(
+            Location
+        );
+
+        Transform.SetRotation(
+            Rotation.Quaternion()
+        );
+
+        Transform.SetScale3D(
+            FVector(
+                Length,
+                0.15f,
+                0.15f
+            )
+        );
+
+
+        Branches->AddInstance(
+            Transform
+        );
+    }
+}
+
+
+// ============================================================
+// BRANCH DIRECTION
+// ============================================================
+
+FVector AMedievalTree::GenerateBranchDirection(
+    int32 Index
+) const
+{
+    const float Angle =
+        (
+            static_cast<float>(Index)
+            /
+            FMath::Max(
+                1,
+                TreeData.Branches.PrimaryBranches
+            )
+        )
+        *
+        360.0f;
+
+
+    const float Radians =
+        FMath::DegreesToRadians(
+            Angle
+        );
+
+
+    const float X =
+        FMath::Cos(Radians);
+
+    const float Y =
+        FMath::Sin(Radians);
+
+
+    return FVector(
+        X,
+        Y,
+        FMath::FRandRange(
+            0.15f,
+            0.65f
+        )
+    ).GetSafeNormal();
+}
+
+
+// ============================================================
+// ROOTS
+// ============================================================
+
+void AMedievalTree::GenerateRoots()
+{
+    if (!Roots)
+        return;
+
+
+    Roots->ClearInstances();
+
+
+    for (
+        int32 Index = 0;
+        Index < TreeData.Roots.MajorRoots;
+        ++Index
+    )
+    {
+        const float Angle =
+            (
+                static_cast<float>(Index)
+                /
+                TreeData.Roots.MajorRoots
+            )
+            *
+            360.0f;
+
+
+        const float Radians =
+            FMath::DegreesToRadians(
+                Angle
+            );
+
+
+        FVector Direction(
+            FMath::Cos(Radians),
+            FMath::Sin(Radians),
+            -0.15f
+        );
+
+
+        Direction.Normalize();
+
+
+        FTransform Transform;
+
+
+        Transform.SetLocation(
+            FVector(
+                0.0f,
+                0.0f,
+                0.15f
+            )
+        );
+
+
+        Transform.SetRotation(
+            Direction.Rotation()
+                .Quaternion()
+        );
+
+
+        Transform.SetScale3D(
+            FVector(
+                TreeData.Roots.RootSpread,
+                0.15f,
+                0.15f
+            )
+        );
+
+
+        Roots->AddInstance(
+            Transform
+        );
+    }
+}
+
+
+// ============================================================
+// LEAVES
+// ============================================================
+
+void AMedievalTree::GenerateLeaves()
+{
+    if (!Leaves)
+        return;
+
+
+    Leaves->ClearInstances();
+
+
+    const int32 LeafClusters =
+        FMath::RoundToInt(
+            100.0f *
+            TreeData.Leaves.LeafDensity
+        );
+
+
+    const float CanopyRadius =
+        FMath::FRandRange(
+            TreeData.Dimensions.MinimumCanopyRadius,
+            TreeData.Dimensions.MaximumCanopyRadius
+        );
+
+
+    const float TreeHeight =
+        FMath::FRandRange(
+            TreeData.Dimensions.MinimumHeight,
+            TreeData.Dimensions.MaximumHeight
+        );
+
+
+    for (
+        int32 Index = 0;
+        Index < LeafClusters;
+        ++Index
+    )
+    {
+        const float Angle =
+            FMath::FRandRange(
+                0.0f,
+                360.0f
+            );
+
+
+        const float Radius =
+            FMath::FRandRange(
+                0.0f,
+                CanopyRadius
+            );
+
+
+        const float Radians =
+            FMath::DegreesToRadians(
+                Angle
+            );
+
+
+        FVector Location;
+
+        Location.X =
+            FMath::Cos(Radians)
+            * Radius;
+
+        Location.Y =
+            FMath::Sin(Radians)
+            * Radius;
+
+        Location.Z =
+            TreeHeight *
+            FMath::FRandRange(
+                0.55f,
+                1.0f
+            );
+
+
+        FTransform Transform;
+
+        Transform.SetLocation(
+            Location
+        );
+
+
+        const float Scale =
+            FMath::FRandRange(
+                0.7f,
+                1.3f
+            )
+            *
+            TreeData.Leaves.LeafSize;
+
+
+        Transform.SetScale3D(
+            FVector(
+                Scale,
+                Scale,
+                Scale
+            )
+        );
+
+
+        Leaves->AddInstance(
+            Transform
+        );
+    }
+}
+
+
+// ============================================================
+// AGE
+// ============================================================
+
+void AMedievalTree::DetermineAge()
+{
+    if (
+        TreeAgeYears < 5.0f
+    )
+    {
+        Age =
+            ETreeAge::Sapling;
+    }
+
+    else if (
+        TreeAgeYears < 20.0f
+    )
+    {
+        Age =
+            ETreeAge::Young;
+    }
+
+    else if (
+        TreeAgeYears <
+        TreeData.Growth.AncientAge
+    )
+    {
+        Age =
+            ETreeAge::Mature;
+    }
+
+    else if (
+        TreeAgeYears <
+        TreeData.Growth.MaximumAge
+    )
+    {
+        Age =
+            ETreeAge::Old;
+    }
+
+    else
+    {
+        Age =
+            ETreeAge::Ancient;
+    }
+}
+
+
+// ============================================================
+// GROW TREE
+// ============================================================
+
+void AMedievalTree::GrowTree(
+    float Years
+)
+{
+    if (
+        Health ==
+        ETreeHealth::Dead
+    )
+    {
+        return;
+    }
+
+
+    TreeAgeYears += Years;
+
+
+    TreeAgeYears =
+        FMath::Min(
+            TreeAgeYears,
+            TreeData.Growth.MaximumAge
+        );
+
+
+    DetermineAge();
+
+    GenerateTree();
+}
+
+
+// ============================================================
+// SEASON
+// ============================================================
+
+void AMedievalTree::ApplySeason(
+    ETreeSeason Season
+)
+{
+    switch (Season)
+    {
+        case ETreeSeason::Spring:
+
+            /*
+             * New bright foliage.
+             */
+
+            break;
+
+
+        case ETreeSeason::Summer:
+
+            /*
+             * Full canopy.
+             */
+
+            break;
+
+
+        case ETreeSeason::Autumn:
+
+            /*
+             * Deciduous trees turn orange,
+             * yellow and brown.
+             */
+
+            if (
+                !TreeData.Leaves.bEvergreen
+            )
+            {
+                // Leaf material should receive
+                // autumn colour parameters.
+            }
+
+            break;
+
+
+        case ETreeSeason::Winter:
+
+            /*
+             * Deciduous leaves disappear.
+             * Evergreen species retain foliage.
+             */
+
+            if (
+                TreeData.Leaves.bDropsLeaves
+                &&
+                !TreeData.Leaves.bEvergreen
+            )
+            {
+                Leaves->SetVisibility(
+                    false
+                );
+            }
+
+            break;
+    }
+}
+
+
+// ============================================================
+// WIND
+// ============================================================
+
+void AMedievalTree::ApplyWind(
+    FVector WindDirection,
+    float WindStrength
+)
+{
+    const float Strength =
+        WindStrength *
+        TreeData.Wind.WindResistance;
+
+
+    const FRotator WindRotation =
+        WindDirection.Rotation();
+
+
+    Branches->SetRelativeRotation(
+        WindRotation *
+        Strength
+    );
+
+
+    Leaves->SetRelativeRotation(
+        WindRotation *
+        Strength *
+        1.5f
+    );
+}
+
+
+// ============================================================
+// TREE HARVEST
+// ============================================================
+
+float AMedievalTree::FellTree()
+{
+    if (
+        Health ==
+        ETreeHealth::Dead
+    )
+    {
+        return 0.0f;
+    }
+
+
+    Health =
+        ETreeHealth::Dead;
+
+
+    const float Yield =
+        TreeData.Wood.LogYield *
+        FMath::Clamp(
+            TreeAgeYears /
+            TreeData.Growth.MatureAge,
+            0.2f,
+            2.0f
+        );
+
+
+    return Yield;
+}
+
+
+// ============================================================
+// LOG YIELD
+// ============================================================
+
+float AMedievalTree::GetLogYield() const
+{
+    return
+        TreeData.Wood.LogYield;
+}
+Species profiles
+
+You can then give every tree a genuinely different profile rather than simply changing its texture:
+
+// ============================================================
+// OAK
+// ============================================================
+
+FMedievalTreeSpeciesData Oak;
+
+Oak.Species =
+    EMedievalTreeSpecies::Oak;
+
+Oak.DisplayName =
+    TEXT("Oak");
+
+Oak.GrowthForm =
+    ETreeGrowthForm::WideCanopy;
+
+Oak.Dimensions.MinimumHeight = 8.0f;
+Oak.Dimensions.MaximumHeight = 24.0f;
+
+Oak.Dimensions.MinimumTrunkRadius = 0.35f;
+Oak.Dimensions.MaximumTrunkRadius = 1.20f;
+
+Oak.Dimensions.MinimumCanopyRadius = 4.0f;
+Oak.Dimensions.MaximumCanopyRadius = 11.0f;
+
+Oak.Dimensions.MinimumBranches = 20;
+Oak.Dimensions.MaximumBranches = 100;
+
+Oak.Wood.LogYield = 18.0f;
+Oak.Wood.TimberQuality = 1.0f;
+Oak.Wood.WoodHardness = 0.95f;
+Oak.Wood.ConstructionValue = 1.0f;
+
+Oak.Bark.BarkRoughness = 0.9f;
+Oak.Bark.BarkCracking = 0.65f;
+
+Oak.Leaves.LeafDensity = 1.4f;
+Oak.Leaves.LeafSize = 0.9f;
+
+Oak.Branches.PrimaryBranches = 18;
+Oak.Branches.SecondaryBranches = 50;
+Oak.Branches.TertiaryBranches = 120;
+
+Oak.Roots.RootSpread = 4.0f;
+Oak.Roots.MajorRoots = 8;
+
+Oak.Growth.GrowthPerYear = 0.30f;
+Oak.Growth.MatureAge = 35.0f;
+Oak.Growth.AncientAge = 180.0f;
+Oak.Growth.MaximumAge = 500.0f;
+// ============================================================
+// BIRCH
+// ============================================================
+
+FMedievalTreeSpeciesData Birch;
+
+Birch.Species =
+    EMedievalTreeSpecies::Birch;
+
+Birch.DisplayName =
+    TEXT("Silver Birch");
+
+Birch.GrowthForm =
+    ETreeGrowthForm::NarrowCanopy;
+
+Birch.Dimensions.MinimumHeight = 7.0f;
+Birch.Dimensions.MaximumHeight = 20.0f;
+
+Birch.Dimensions.MinimumTrunkRadius = 0.15f;
+Birch.Dimensions.MaximumTrunkRadius = 0.55f;
+
+Birch.Dimensions.MinimumCanopyRadius = 2.0f;
+Birch.Dimensions.MaximumCanopyRadius = 6.0f;
+
+Birch.Wood.LogYield = 8.0f;
+Birch.Wood.TimberQuality = 0.75f;
+
+Birch.Bark.BarkRoughness = 0.25f;
+Birch.Bark.BarkCracking = 0.10f;
+
+Birch.Leaves.LeafDensity = 0.85f;
+Birch.Leaves.LeafSize = 0.65f;
+
+Birch.Branches.PrimaryBranches = 12;
+Birch.Branches.SecondaryBranches = 35;
+Birch.Branches.TertiaryBranches = 80;
+
+Birch.Growth.GrowthPerYear = 0.45f;
+Birch.Growth.MatureAge = 20.0f;
+Birch.Growth.MaximumAge = 120.0f;
+// ============================================================
+// WILLOW
+// ============================================================
+
+FMedievalTreeSpeciesData Willow;
+
+Willow.Species =
+    EMedievalTreeSpecies::Willow;
+
+Willow.DisplayName =
+    TEXT("Willow");
+
+Willow.GrowthForm =
+    ETreeGrowthForm::Drooping;
+
+Willow.Dimensions.MinimumHeight = 6.0f;
+Willow.Dimensions.MaximumHeight = 18.0f;
+
+Willow.Dimensions.MinimumCanopyRadius = 5.0f;
+Willow.Dimensions.MaximumCanopyRadius = 12.0f;
+
+Willow.Dimensions.MinimumBranches = 25;
+Willow.Dimensions.MaximumBranches = 120;
+
+Willow.Wood.LogYield = 12.0f;
+Willow.Wood.TimberQuality = 0.55f;
+
+Willow.Bark.BarkRoughness = 0.45f;
+
+Willow.Leaves.LeafDensity = 1.6f;
+Willow.Leaves.LeafSize = 0.45f;
+
+Willow.Branches.PrimaryBranches = 25;
+Willow.Branches.SecondaryBranches = 70;
+Willow.Branches.TertiaryBranches = 180;
+
+Willow.Wind.LeafMovement = 2.2f;
+Willow.Wind.BranchMovement = 1.7f;
+// ============================================================
+// PINE
+// ============================================================
+
+FMedievalTreeSpeciesData Pine;
+
+Pine.Species =
+    EMedievalTreeSpecies::Pine;
+
+Pine.DisplayName =
+    TEXT("Scots Pine");
+
+Pine.GrowthForm =
+    ETreeGrowthForm::Conical;
+
+Pine.Dimensions.MinimumHeight = 10.0f;
+Pine.Dimensions.MaximumHeight = 30.0f;
+
+Pine.Dimensions.MinimumTrunkRadius = 0.30f;
+Pine.Dimensions.MaximumTrunkRadius = 0.90f;
+
+Pine.Dimensions.MinimumCanopyRadius = 2.5f;
+Pine.Dimensions.MaximumCanopyRadius = 6.0f;
+
+Pine.Dimensions.MinimumBranches = 15;
+Pine.Dimensions.MaximumBranches = 70;
+
+Pine.Wood.LogYield = 20.0f;
+Pine.Wood.TimberQuality = 0.85f;
+
+Pine.Leaves.bEvergreen = true;
+Pine.Leaves.bDropsLeaves = false;
+Pine.Leaves.LeafDensity = 1.1f;
+
+Pine.Branches.PrimaryBranches = 15;
+Pine.Branches.SecondaryBranches = 45;
+Pine.Branches.TertiaryBranches = 100;
+
+Pine.Growth.MatureAge = 40.0f;
+Pine.Growth.AncientAge = 200.0f;
+Pine.Growth.MaximumAge = 500.0f;
