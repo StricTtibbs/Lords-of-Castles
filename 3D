@@ -1,0 +1,1454 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "Medieval3DWorld.generated.h"
+
+UENUM(BlueprintType)
+enum class EWorldMapType : uint8
+{
+    GreenValley,
+    HighlandKingdom,
+    Riverlands,
+    DeepForest,
+    CoastalPlains
+};
+
+UENUM(BlueprintType)
+enum class EResourceType : uint8
+{
+    None,
+    Wood,
+    Stone,
+    Iron,
+    Copper,
+    Tin,
+    Gold,
+    Salt,
+    Clay,
+    Flax,
+    FertileSoil,
+    Fish
+};
+
+USTRUCT(BlueprintType)
+struct FWorldTile
+{
+    GENERATED_BODY()
+
+    FVector Location = FVector::ZeroVector;
+
+    float Height = 0.0f;
+    float Moisture = 0.0f;
+    float Fertility = 0.0f;
+    float Temperature = 0.0f;
+    float Slope = 0.0f;
+
+    bool bWater = false;
+    bool bRiver = false;
+    bool bForest = false;
+    bool bRoad = false;
+
+    EResourceType Resource =
+        EResourceType::None;
+};
+
+UCLASS()
+class MEDIEVALGAME_API AMedieval3DWorld
+    : public AActor
+{
+    GENERATED_BODY()
+
+public:
+
+    AMedieval3DWorld();
+
+    virtual void BeginPlay() override;
+
+    virtual void Tick(
+        float DeltaTime
+    ) override;
+
+    // ========================================================
+    // WORLD
+    // ========================================================
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    EWorldMapType MapType =
+        EWorldMapType::GreenValley;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 WorldSeed = 12345;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 WorldSize = 512;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float TileSize = 400.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float MaximumTerrainHeight = 3000.0f;
+
+    // ========================================================
+    // TERRAIN
+    // ========================================================
+
+    UPROPERTY()
+    TArray<FWorldTile> Tiles;
+
+    UPROPERTY()
+    UProceduralMeshComponent* TerrainMesh;
+
+    UPROPERTY()
+    UProceduralMeshComponent* WaterMesh;
+
+    // ========================================================
+    // GENERATION
+    // ========================================================
+
+    void GenerateWorld();
+
+    void GenerateTerrain();
+
+    void GenerateWater();
+
+    void GenerateRivers();
+
+    void GenerateForests();
+
+    void GenerateResources();
+
+    void GenerateRoads();
+
+    void GenerateStartingSettlement();
+
+    // ========================================================
+    // TERRAIN FUNCTIONS
+    // ========================================================
+
+    float GetHeight(
+        float X,
+        float Y
+    ) const;
+
+    float GetMountainHeight(
+        float X,
+        float Y
+    ) const;
+
+    float GetValleyHeight(
+        float X,
+        float Y
+    ) const;
+
+    float GetRiverHeight(
+        float X,
+        float Y
+    ) const;
+
+    float GetMoisture(
+        float X,
+        float Y
+    ) const;
+
+    float GetFertility(
+        float X,
+        float Y
+    ) const;
+
+    float GetTemperature(
+        float X,
+        float Y
+    ) const;
+
+    // ========================================================
+    // 3D OBJECTS
+    // ========================================================
+
+    void SpawnTrees();
+
+    void SpawnRocks();
+
+    void SpawnBushes();
+
+    void SpawnGrass();
+
+    void SpawnResourceNodes();
+
+    // ========================================================
+    // SETTLEMENT
+    // ========================================================
+
+    void SpawnStartingHouses();
+
+    void SpawnStartingTents();
+
+    void SpawnStartingRoads();
+
+    // ========================================================
+    // UTILITIES
+    // ========================================================
+
+    int32 GetTileIndex(
+        int32 X,
+        int32 Y
+    ) const;
+
+    bool IsInsideWorld(
+        int32 X,
+        int32 Y
+    ) const;
+
+    FVector GetWorldLocation(
+        int32 X,
+        int32 Y
+    ) const;
+
+    // ========================================================
+    // WIND
+    // ========================================================
+
+    float WindStrength = 1.0f;
+
+    float WindDirection = 0.0f;
+
+private:
+
+    FRandomStream Random;
+
+    float WorldTime = 0.0f;
+};
+#include "Medieval3DWorld.h"
+
+#include "ProceduralMeshComponent.h"
+#include "Engine/World.h"
+#include "Kismet/GameplayStatics.h"
+#include "Components/StaticMeshComponent.h"
+
+AMedieval3DWorld::AMedieval3DWorld()
+{
+    PrimaryActorTick.bCanEverTick = true;
+
+    Random.Initialize(WorldSeed);
+
+    TerrainMesh =
+        CreateDefaultSubobject<UProceduralMeshComponent>(
+            TEXT("TerrainMesh")
+        );
+
+    RootComponent = TerrainMesh;
+
+    WaterMesh =
+        CreateDefaultSubobject<UProceduralMeshComponent>(
+            TEXT("WaterMesh")
+        );
+
+    WaterMesh->SetupAttachment(
+        RootComponent
+    );
+}
+
+
+void AMedieval3DWorld::BeginPlay()
+{
+    Super::BeginPlay();
+
+    GenerateWorld();
+}
+
+
+void AMedieval3DWorld::Tick(
+    float DeltaTime
+)
+{
+    Super::Tick(DeltaTime);
+
+    WorldTime += DeltaTime;
+
+    /*
+     * Wind is continuously changing.
+     *
+     * Trees, grass, crops, flags and smoke
+     * can use this value through materials
+     * or animation blueprints.
+     */
+
+    WindStrength =
+        0.8f +
+        FMath::Sin(
+            WorldTime * 0.25f
+        ) * 0.25f;
+
+    WindDirection =
+        FMath::Sin(
+            WorldTime * 0.08f
+        ) * 0.5f;
+}
+
+
+// ============================================================
+// WORLD GENERATION
+// ============================================================
+
+void AMedieval3DWorld::GenerateWorld()
+{
+    Random.Initialize(
+        WorldSeed
+    );
+
+    Tiles.Empty();
+
+    Tiles.SetNum(
+        WorldSize *
+        WorldSize
+    );
+
+    GenerateTerrain();
+
+    GenerateWater();
+
+    GenerateRivers();
+
+    GenerateForests();
+
+    GenerateResources();
+
+    GenerateRoads();
+
+    GenerateStartingSettlement();
+
+    SpawnTrees();
+
+    SpawnRocks();
+
+    SpawnBushes();
+
+    SpawnGrass();
+
+    SpawnResourceNodes();
+}
+
+
+// ============================================================
+// TERRAIN
+// ============================================================
+
+void AMedieval3DWorld::GenerateTerrain()
+{
+    TArray<FVector> Vertices;
+    TArray<int32> Triangles;
+    TArray<FVector> Normals;
+    TArray<FVector2D> UVs;
+
+    Vertices.Reserve(
+        WorldSize *
+        WorldSize
+    );
+
+    UVs.Reserve(
+        WorldSize *
+        WorldSize
+    );
+
+    for (
+        int32 Y = 0;
+        Y < WorldSize;
+        Y++
+    )
+    {
+        for (
+            int32 X = 0;
+            X < WorldSize;
+            X++
+        )
+        {
+            const float WorldX =
+                X * TileSize;
+
+            const float WorldY =
+                Y * TileSize;
+
+            const float Height =
+                GetHeight(
+                    WorldX,
+                    WorldY
+                );
+
+            const int32 Index =
+                GetTileIndex(
+                    X,
+                    Y
+                );
+
+            Tiles[Index].Location =
+                FVector(
+                    WorldX,
+                    WorldY,
+                    Height
+                );
+
+            Tiles[Index].Height =
+                Height;
+
+            Vertices.Add(
+                FVector(
+                    WorldX,
+                    WorldY,
+                    Height
+                )
+            );
+
+            UVs.Add(
+                FVector2D(
+                    static_cast<float>(X)
+                    / WorldSize,
+
+                    static_cast<float>(Y)
+                    / WorldSize
+                )
+            );
+        }
+    }
+
+
+    // ========================================================
+    // TRIANGLES
+    // ========================================================
+
+    for (
+        int32 Y = 0;
+        Y < WorldSize - 1;
+        Y++
+    )
+    {
+        for (
+            int32 X = 0;
+            X < WorldSize - 1;
+            X++
+        )
+        {
+            int32 A =
+                GetTileIndex(
+                    X,
+                    Y
+                );
+
+            int32 B =
+                GetTileIndex(
+                    X + 1,
+                    Y
+                );
+
+            int32 C =
+                GetTileIndex(
+                    X,
+                    Y + 1
+                );
+
+            int32 D =
+                GetTileIndex(
+                    X + 1,
+                    Y + 1
+                );
+
+            Triangles.Add(A);
+            Triangles.Add(B);
+            Triangles.Add(C);
+
+            Triangles.Add(B);
+            Triangles.Add(D);
+            Triangles.Add(C);
+        }
+    }
+
+
+    // ========================================================
+    // NORMALS
+    // ========================================================
+
+    Normals.SetNum(
+        Vertices.Num()
+    );
+
+    for (
+        int32 i = 0;
+        i < Vertices.Num();
+        i++
+    )
+    {
+        Normals[i] =
+            FVector::UpVector;
+    }
+
+
+    TerrainMesh->CreateMeshSection(
+        0,
+        Vertices,
+        Triangles,
+        Normals,
+        UVs,
+        TArray<FColor>(),
+        TArray<FProcMeshTangent>(),
+        true
+    );
+}
+
+
+// ============================================================
+// HEIGHT
+// ============================================================
+
+float AMedieval3DWorld::GetHeight(
+    float X,
+    float Y
+) const
+{
+    float LargeNoise =
+        FMath::PerlinNoise2D(
+            FVector2D(
+                X * 0.0004f,
+                Y * 0.0004f
+            )
+        );
+
+    float MediumNoise =
+        FMath::PerlinNoise2D(
+            FVector2D(
+                X * 0.0012f,
+                Y * 0.0012f
+            )
+        );
+
+    float SmallNoise =
+        FMath::PerlinNoise2D(
+            FVector2D(
+                X * 0.004f,
+                Y * 0.004f
+            )
+        );
+
+
+    LargeNoise =
+        LargeNoise * 0.5f + 0.5f;
+
+    MediumNoise =
+        MediumNoise * 0.5f + 0.5f;
+
+    SmallNoise =
+        SmallNoise * 0.5f + 0.5f;
+
+
+    float Height =
+        LargeNoise * 0.50f +
+        MediumNoise * 0.30f +
+        SmallNoise * 0.20f;
+
+
+    // Mountains
+
+    if (
+        MapType ==
+        EWorldMapType::HighlandKingdom
+    )
+    {
+        Height +=
+            GetMountainHeight(
+                X,
+                Y
+            );
+    }
+
+
+    // Valley
+
+    if (
+        MapType ==
+        EWorldMapType::GreenValley
+    )
+    {
+        Height -=
+            GetValleyHeight(
+                X,
+                Y
+            );
+    }
+
+
+    // Riverlands
+
+    if (
+        MapType ==
+        EWorldMapType::Riverlands
+    )
+    {
+        Height -=
+            GetRiverHeight(
+                X,
+                Y
+            );
+    }
+
+
+    // Coastal map
+
+    if (
+        MapType ==
+        EWorldMapType::CoastalPlains
+    )
+    {
+        float Coast =
+            X /
+            (
+                WorldSize *
+                TileSize
+            );
+
+        Height -=
+            (1.0f - Coast)
+            * 0.45f;
+    }
+
+
+    return
+        FMath::Clamp(
+            Height,
+            0.0f,
+            1.0f
+        )
+        *
+        MaximumTerrainHeight;
+}
+
+
+// ============================================================
+// MOUNTAINS
+// ============================================================
+
+float AMedieval3DWorld::GetMountainHeight(
+    float X,
+    float Y
+) const
+{
+    float Noise =
+        FMath::PerlinNoise2D(
+            FVector2D(
+                X * 0.0008f,
+                Y * 0.0008f
+            )
+        );
+
+    Noise =
+        FMath::Abs(
+            Noise
+        );
+
+    Noise =
+        FMath::Pow(
+            Noise,
+            2.5f
+        );
+
+    return Noise *
+        1800.0f;
+}
+
+
+// ============================================================
+// VALLEYS
+// ============================================================
+
+float AMedieval3DWorld::GetValleyHeight(
+    float X,
+    float Y
+) const
+{
+    float Noise =
+        FMath::PerlinNoise2D(
+            FVector2D(
+                X * 0.0007f,
+                Y * 0.0007f
+            )
+        );
+
+    Noise =
+        FMath::Abs(
+            Noise
+        );
+
+    return
+        (1.0f - Noise)
+        * 800.0f;
+}
+
+
+// ============================================================
+// RIVERS
+// ============================================================
+
+float AMedieval3DWorld::GetRiverHeight(
+    float X,
+    float Y
+) const
+{
+    float River =
+        FMath::Abs(
+            FMath::Sin(
+                Y * 0.0008f +
+                FMath::Sin(
+                    X * 0.0003f
+                )
+            )
+        );
+
+    if (River < 0.08f)
+    {
+        return
+            700.0f;
+    }
+
+    return 0.0f;
+}
+
+
+// ============================================================
+// MOISTURE
+// ============================================================
+
+float AMedieval3DWorld::GetMoisture(
+    float X,
+    float Y
+) const
+{
+    float Value =
+        FMath::PerlinNoise2D(
+            FVector2D(
+                X * 0.0015f,
+                Y * 0.0015f
+            )
+        );
+
+    return
+        Value * 0.5f +
+        0.5f;
+}
+
+
+// ============================================================
+// FERTILITY
+// ============================================================
+
+float AMedieval3DWorld::GetFertility(
+    float X,
+    float Y
+) const
+{
+    float Moisture =
+        GetMoisture(
+            X,
+            Y
+        );
+
+    float Soil =
+        FMath::PerlinNoise2D(
+            FVector2D(
+                X * 0.003f,
+                Y * 0.003f
+            )
+        );
+
+    Soil =
+        Soil * 0.5f +
+        0.5f;
+
+    return
+        FMath::Clamp(
+            Moisture * 0.55f +
+            Soil * 0.45f,
+            0.0f,
+            1.0f
+        );
+}
+
+
+// ============================================================
+// TEMPERATURE
+// ============================================================
+
+float AMedieval3DWorld::GetTemperature(
+    float X,
+    float Y
+) const
+{
+    float Latitude =
+        Y /
+        (
+            WorldSize *
+            TileSize
+        );
+
+    return
+        1.0f -
+        FMath::Abs(
+            Latitude -
+            0.5f
+        );
+}
+
+
+// ============================================================
+// WATER
+// ============================================================
+
+void AMedieval3DWorld::GenerateWater()
+{
+    TArray<FVector> Vertices;
+    TArray<int32> Triangles;
+
+    const float WaterHeight =
+        500.0f;
+
+    Vertices.Add(
+        FVector(
+            0,
+            0,
+            WaterHeight
+        )
+    );
+
+    Vertices.Add(
+        FVector(
+            WorldSize * TileSize,
+            0,
+            WaterHeight
+        )
+    );
+
+    Vertices.Add(
+        FVector(
+            0,
+            WorldSize * TileSize,
+            WaterHeight
+        )
+    );
+
+    Vertices.Add(
+        FVector(
+            WorldSize * TileSize,
+            WorldSize * TileSize,
+            WaterHeight
+        )
+    );
+
+    Triangles = {
+        0, 1, 2,
+        1, 3, 2
+    };
+
+    WaterMesh->CreateMeshSection(
+        0,
+        Vertices,
+        Triangles,
+        TArray<FVector>(),
+        TArray<FVector2D>(),
+        TArray<FColor>(),
+        TArray<FProcMeshTangent>(),
+        true
+    );
+}
+
+
+// ============================================================
+// RIVERS
+// ============================================================
+
+void AMedieval3DWorld::GenerateRivers()
+{
+    for (
+        int32 Y = 0;
+        Y < WorldSize;
+        Y++
+    )
+    {
+        for (
+            int32 X = 0;
+            X < WorldSize;
+            X++
+        )
+        {
+            FWorldTile& Tile =
+                Tiles[
+                    GetTileIndex(
+                        X,
+                        Y
+                    )
+                ];
+
+            float RiverNoise =
+                FMath::Abs(
+                    FMath::PerlinNoise2D(
+                        FVector2D(
+                            X * 0.012f,
+                            Y * 0.012f
+                        )
+                    )
+                );
+
+            if (
+                RiverNoise <
+                0.035f
+            )
+            {
+                Tile.bRiver = true;
+            }
+        }
+    }
+}
+
+
+// ============================================================
+// FORESTS
+// ============================================================
+
+void AMedieval3DWorld::GenerateForests()
+{
+    for (
+        int32 Y = 0;
+        Y < WorldSize;
+        Y++
+    )
+    {
+        for (
+            int32 X = 0;
+            X < WorldSize;
+            X++
+        )
+        {
+            FWorldTile& Tile =
+                Tiles[
+                    GetTileIndex(
+                        X,
+                        Y
+                    )
+                ];
+
+            float ForestNoise =
+                FMath::PerlinNoise2D(
+                    FVector2D(
+                        X * 0.02f,
+                        Y * 0.02f
+                    )
+                );
+
+            float Moisture =
+                GetMoisture(
+                    X * TileSize,
+                    Y * TileSize
+                );
+
+            if (
+                ForestNoise > -0.05f &&
+                Moisture > 0.45f
+            )
+            {
+                Tile.bForest = true;
+            }
+
+            if (
+                MapType ==
+                EWorldMapType::DeepForest
+            )
+            {
+                if (
+                    ForestNoise > -0.4f
+                )
+                {
+                    Tile.bForest = true;
+                }
+            }
+        }
+    }
+}
+
+
+// ============================================================
+// RESOURCES
+// ============================================================
+
+void AMedieval3DWorld::GenerateResources()
+{
+    for (
+        int32 Y = 0;
+        Y < WorldSize;
+        Y++
+    )
+    {
+        for (
+            int32 X = 0;
+            X < WorldSize;
+            X++
+        )
+        {
+            FWorldTile& Tile =
+                Tiles[
+                    GetTileIndex(
+                        X,
+                        Y
+                    )
+                ];
+
+            float RandomValue =
+                Random.FRand();
+
+
+            if (
+                Tile.bForest &&
+                RandomValue < 0.25f
+            )
+            {
+                Tile.Resource =
+                    EResourceType::Wood;
+
+                continue;
+            }
+
+
+            if (
+                Tile.Height >
+                2200.0f &&
+                RandomValue < 0.18f
+            )
+            {
+                Tile.Resource =
+                    EResourceType::Iron;
+
+                continue;
+            }
+
+
+            if (
+                Tile.Height >
+                1400.0f &&
+                RandomValue < 0.20f
+            )
+            {
+                Tile.Resource =
+                    EResourceType::Stone;
+
+                continue;
+            }
+
+
+            if (
+                GetFertility(
+                    X * TileSize,
+                    Y * TileSize
+                ) > 0.75f
+            )
+            {
+                Tile.Resource =
+                    EResourceType::FertileSoil;
+            }
+        }
+    }
+}
+
+
+// ============================================================
+// ROADS
+// ============================================================
+
+void AMedieval3DWorld::GenerateRoads()
+{
+    const int32 Centre =
+        WorldSize / 2;
+
+    for (
+        int32 X = 0;
+        X < WorldSize;
+        X++
+    )
+    {
+        int32 Index =
+            GetTileIndex(
+                X,
+                Centre
+            );
+
+        Tiles[Index].bRoad = true;
+    }
+
+    for (
+        int32 Y = 0;
+        Y < WorldSize;
+        Y++
+    )
+    {
+        int32 Index =
+            GetTileIndex(
+                Centre,
+                Y
+            );
+
+        Tiles[Index].bRoad = true;
+    }
+}
+
+
+// ============================================================
+// STARTING SETTLEMENT
+// ============================================================
+
+void AMedieval3DWorld::GenerateStartingSettlement()
+{
+    const int32 Centre =
+        WorldSize / 2;
+
+    const int32 SettlementRadius =
+        25;
+
+    for (
+        int32 Y =
+            Centre - SettlementRadius;
+
+        Y <
+            Centre + SettlementRadius;
+
+        Y++
+    )
+    {
+        for (
+            int32 X =
+                Centre - SettlementRadius;
+
+            X <
+                Centre + SettlementRadius;
+
+            X++
+        )
+        {
+            if (
+                !IsInsideWorld(
+                    X,
+                    Y
+                )
+            )
+                continue;
+
+            Tiles[
+                GetTileIndex(
+                    X,
+                    Y
+                )
+            ].bRoad =
+                true;
+        }
+    }
+
+    SpawnStartingTents();
+
+    SpawnStartingHouses();
+
+    SpawnStartingRoads();
+}
+
+
+// ============================================================
+// TREES
+// ============================================================
+
+void AMedieval3DWorld::SpawnTrees()
+{
+    /*
+     * In the final project this should use
+     * InstancedStaticMeshComponent / HISM
+     * rather than spawning thousands of actors.
+     */
+
+    for (
+        int32 i = 0;
+        i < Tiles.Num();
+        i += 7
+    )
+    {
+        const FWorldTile& Tile =
+            Tiles[i];
+
+        if (!Tile.bForest)
+            continue;
+
+        FVector Location =
+            Tile.Location;
+
+        Location.Z += 30.0f;
+
+        /*
+         * Replace this section with:
+         *
+         * HISM->AddInstance(...)
+         *
+         * using a detailed tree mesh.
+         */
+    }
+}
+
+
+// ============================================================
+// ROCKS
+// ============================================================
+
+void AMedieval3DWorld::SpawnRocks()
+{
+    for (
+        int32 i = 0;
+        i < Tiles.Num();
+        i += 13
+    )
+    {
+        const FWorldTile& Tile =
+            Tiles[i];
+
+        if (
+            Tile.Resource !=
+            EResourceType::Stone
+        )
+            continue;
+
+        FVector Location =
+            Tile.Location;
+
+        Location.Z += 20.0f;
+
+        /*
+         * Spawn detailed rock
+         * HISM instance here.
+         */
+    }
+}
+
+
+// ============================================================
+// BUSHES
+// ============================================================
+
+void AMedieval3DWorld::SpawnBushes()
+{
+    /*
+     * Small vegetation layer.
+     *
+     * Bushes should use instanced meshes
+     * and distance-based culling.
+     */
+}
+
+
+// ============================================================
+// GRASS
+// ============================================================
+
+void AMedieval3DWorld::SpawnGrass()
+{
+    /*
+     * Grass should preferably be generated
+     * through Landscape Grass Output or
+     * Nanite-compatible foliage systems.
+     *
+     * Wind animation should be handled by
+     * the grass material using WindStrength.
+     */
+}
+
+
+// ============================================================
+// RESOURCE NODES
+// ============================================================
+
+void AMedieval3DWorld::SpawnResourceNodes()
+{
+    for (
+        const FWorldTile& Tile :
+        Tiles
+    )
+    {
+        if (
+            Tile.Resource ==
+            EResourceType::None
+        )
+            continue;
+
+        /*
+         * Resource meshes:
+         *
+         * Wood       -> trees
+         * Stone      -> quarry rocks
+         * Iron       -> iron deposits
+         * Copper     -> copper deposits
+         * Clay       -> clay pits
+         * Salt       -> salt deposits
+         * Flax       -> flax plants
+         */
+    }
+}
+
+
+// ============================================================
+// STARTING TENTS
+// ============================================================
+
+void AMedieval3DWorld::SpawnStartingTents()
+{
+    FVector Centre =
+        GetWorldLocation(
+            WorldSize / 2,
+            WorldSize / 2
+        );
+
+    /*
+     * Five starting family tents.
+     *
+     * Each family can later contain:
+     *
+     * Parents
+     * Children
+     * Workers
+     * Farmers
+     * Builders
+     * Militia
+     */
+
+    for (
+        int32 Family = 0;
+        Family < 5;
+        Family++
+    )
+    {
+        float Angle =
+            Family *
+            72.0f;
+
+        FVector Offset =
+            FVector(
+                FMath::Cos(
+                    FMath::DegreesToRadians(
+                        Angle
+                    )
+                ),
+                FMath::Sin(
+                    FMath::DegreesToRadians(
+                        Angle
+                    )
+                ),
+                0
+            ) * 1000.0f;
+
+        FVector TentLocation =
+            Centre +
+            Offset;
+
+        /*
+         * Spawn detailed tent here.
+         */
+    }
+}
+
+
+// ============================================================
+// STARTING HOUSES
+// ============================================================
+
+void AMedieval3DWorld::SpawnStartingHouses()
+{
+    /*
+     * Houses are intentionally generated
+     * as proper 3D structures rather than
+     * flat icons.
+     *
+     * Future components:
+     *
+     * Foundation
+     * Timber frame
+     * Walls
+     * Roof
+     * Chimney
+     * Door
+     * Windows
+     * Interior
+     * Furniture
+     * Storage
+     * Fireplace
+     * Backyard
+     */
+}
+
+
+// ============================================================
+// ROADS
+// ============================================================
+
+void AMedieval3DWorld::SpawnStartingRoads()
+{
+    /*
+     * Roads follow the actual terrain.
+     *
+     * Future system:
+     *
+     * - road flattening
+     * - mud
+     * - wheel tracks
+     * - footpaths
+     * - bridges
+     * - carts
+     * - pedestrians
+     */
+}
+
+
+// ============================================================
+// UTILITIES
+// ============================================================
+
+int32 AMedieval3DWorld::GetTileIndex(
+    int32 X,
+    int32 Y
+) const
+{
+    return
+        Y * WorldSize + X;
+}
+
+
+bool AMedieval3DWorld::IsInsideWorld(
+    int32 X,
+    int32 Y
+) const
+{
+    return
+        X >= 0 &&
+        Y >= 0 &&
+        X < WorldSize &&
+        Y < WorldSize;
+}
+
+
+FVector AMedieval3DWorld::GetWorldLocation(
+    int32 X,
+    int32 Y
+) const
+{
+    if (
+        !IsInsideWorld(
+            X,
+            Y
+        )
+    )
+    {
+        return FVector::ZeroVector;
+    }
+
+    return
+        Tiles[
+            GetTileIndex(
+                X,
+                Y
+            )
+        ].Location;
+}
