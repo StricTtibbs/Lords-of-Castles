@@ -1,0 +1,911 @@
+// MedievalProductionTypes.h
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "MedievalProductionTypes.generated.h"
+
+UENUM(BlueprintType)
+enum class EProductionType : uint8
+{
+    None,
+
+    CarrotGarden,
+    CabbageGarden,
+    BeetrootGarden,
+    GrapeGarden,
+    HerbGarden,
+
+    ChickenCoop,
+    Orchard,
+
+    Blacksmith,
+    Shieldwright,
+    Armorer,
+    Weaver
+};
+
+UENUM(BlueprintType)
+enum class EItemType : uint8
+{
+    None,
+
+    Logs,
+    Planks,
+    Stone,
+    Iron,
+    Flax,
+
+    Carrots,
+    Cabbages,
+    Beetroot,
+    Grapes,
+    Herbs,
+
+    Eggs,
+    Chicken,
+
+    Swords,
+    Spears,
+    Halberds,
+    Pikes,
+
+    LargeShield,
+    SmallShield,
+
+    MailArmor,
+    PlateArmor,
+    Helmet,
+
+    Gambeson,
+    LinenClothing
+};
+
+USTRUCT(BlueprintType)
+struct FMaterialStack
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    EItemType Item = EItemType::None;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 Amount = 0;
+};
+
+USTRUCT(BlueprintType)
+struct FProductionRecipe
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FName RecipeName;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    TArray<FMaterialStack> Inputs;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    TArray<FMaterialStack> Outputs;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float ProductionTime = 30.0f;
+};
+// BackyardExtension.h
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "MedievalProductionTypes.h"
+#include "BackyardExtension.generated.h"
+
+UCLASS()
+class MEDIEVALGAME_API ABackyardExtension : public AActor
+{
+    GENERATED_BODY()
+
+public:
+
+    ABackyardExtension();
+
+protected:
+
+    virtual void BeginPlay() override;
+
+public:
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float BackyardArea = 0.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float RequiredArea = 30.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    EProductionType ProductionType =
+        EProductionType::None;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 AssignedWorkers = 0;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 MaximumWorkers = 4;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float ProductionMultiplier = 1.0f;
+
+    UFUNCTION(BlueprintCallable)
+    bool CanBuildExtension() const;
+
+    UFUNCTION(BlueprintCallable)
+    void CalculateProductionMultiplier();
+
+    UFUNCTION(BlueprintCallable)
+    float GetProductionMultiplier() const;
+};
+// BackyardExtension.cpp
+
+#include "BackyardExtension.h"
+
+ABackyardExtension::ABackyardExtension()
+{
+    PrimaryActorTick.bCanEverTick = false;
+}
+
+void ABackyardExtension::BeginPlay()
+{
+    Super::BeginPlay();
+
+    CalculateProductionMultiplier();
+}
+
+bool ABackyardExtension::CanBuildExtension() const
+{
+    return BackyardArea >= RequiredArea;
+}
+
+void ABackyardExtension::CalculateProductionMultiplier()
+{
+    if (RequiredArea <= 0.0f)
+    {
+        ProductionMultiplier = 1.0f;
+        return;
+    }
+
+    ProductionMultiplier =
+        FMath::Max(
+            0.25f,
+            BackyardArea / RequiredArea
+        );
+}
+
+float ABackyardExtension::GetProductionMultiplier() const
+{
+    return ProductionMultiplier;
+}
+// MedievalHouse.h
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "BackyardExtension.h"
+#include "MedievalHouse.generated.h"
+
+UENUM(BlueprintType)
+enum class EHouseSize : uint8
+{
+    Small,
+    Medium,
+    Large,
+    Manor
+};
+
+UCLASS()
+class MEDIEVALGAME_API AMedievalHouse
+    : public AActor
+{
+    GENERATED_BODY()
+
+public:
+
+    AMedievalHouse();
+
+protected:
+
+    virtual void BeginPlay() override;
+
+public:
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    EHouseSize HouseSize =
+        EHouseSize::Small;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float HouseFloorArea = 0.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float BackyardArea = 0.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    bool HasBackyard = false;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    ABackyardExtension* Backyard;
+
+    UFUNCTION(BlueprintCallable)
+    bool QualifiesForBackyard() const;
+
+    UFUNCTION(BlueprintCallable)
+    ABackyardExtension*
+    CreateBackyardExtension(
+        EProductionType Type
+    );
+};
+// MedievalHouse.cpp
+
+#include "MedievalHouse.h"
+
+AMedievalHouse::AMedievalHouse()
+{
+    PrimaryActorTick.bCanEverTick = false;
+
+    Backyard = nullptr;
+}
+
+void AMedievalHouse::BeginPlay()
+{
+    Super::BeginPlay();
+
+    HasBackyard =
+        QualifiesForBackyard();
+}
+
+bool AMedievalHouse::QualifiesForBackyard() const
+{
+    /*
+       Large houses and manors have
+       enough land for private production.
+    */
+
+    return
+        HouseSize == EHouseSize::Large ||
+        HouseSize == EHouseSize::Manor;
+}
+
+ABackyardExtension*
+AMedievalHouse::CreateBackyardExtension(
+    EProductionType Type
+)
+{
+    if (!QualifiesForBackyard())
+    {
+        return nullptr;
+    }
+
+    if (Backyard != nullptr)
+    {
+        return Backyard;
+    }
+
+    FActorSpawnParameters Params;
+
+    Params.Owner = this;
+
+    Backyard =
+        GetWorld()->SpawnActor<ABackyardExtension>(
+            ABackyardExtension::StaticClass(),
+            GetActorLocation(),
+            GetActorRotation(),
+            Params
+        );
+
+    if (Backyard)
+    {
+        Backyard->BackyardArea =
+            BackyardArea;
+
+        Backyard->ProductionType =
+            Type;
+
+        Backyard->CalculateProductionMultiplier();
+    }
+
+    return Backyard;
+}
+
+
+// MedievalProductionBuilding.h
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "MedievalProductionTypes.h"
+#include "MedievalProductionBuilding.generated.h"
+
+UCLASS()
+class MEDIEVALGAME_API AMedievalProductionBuilding
+    : public AActor
+{
+    GENERATED_BODY()
+
+public:
+
+    AMedievalProductionBuilding();
+
+protected:
+
+    virtual void BeginPlay() override;
+
+    virtual void Tick(
+        float DeltaTime
+    ) override;
+
+public:
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    EProductionType ProductionType =
+        EProductionType::None;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    TArray<FProductionRecipe> Recipes;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    TArray<FMaterialStack> Inventory;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 Workers = 0;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 MaximumWorkers = 4;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float ProductionSpeed = 1.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float CurrentProductionTime = 0.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 CurrentRecipe = -1;
+
+    UFUNCTION(BlueprintCallable)
+    bool HasMaterial(
+        EItemType Item,
+        int32 Amount
+    ) const;
+
+    UFUNCTION(BlueprintCallable)
+    bool ConsumeMaterial(
+        EItemType Item,
+        int32 Amount
+    );
+
+    UFUNCTION(BlueprintCallable)
+    void AddMaterial(
+        EItemType Item,
+        int32 Amount
+    );
+
+    UFUNCTION(BlueprintCallable)
+    bool StartRecipe(
+        int32 RecipeIndex
+    );
+
+    UFUNCTION(BlueprintCallable)
+    void CompleteRecipe();
+
+private:
+
+    void SetupRecipes();
+
+    FProductionRecipe*
+    GetCurrentRecipe();
+};
+// MedievalProductionBuilding.cpp
+
+#include "MedievalProductionBuilding.h"
+
+AMedievalProductionBuilding::AMedievalProductionBuilding()
+{
+    PrimaryActorTick.bCanEverTick = true;
+}
+
+void AMedievalProductionBuilding::BeginPlay()
+{
+    Super::BeginPlay();
+
+    SetupRecipes();
+}
+
+void AMedievalProductionBuilding::Tick(
+    float DeltaTime
+)
+{
+    Super::Tick(DeltaTime);
+
+    if (CurrentRecipe < 0)
+        return;
+
+    if (Workers <= 0)
+        return;
+
+    FProductionRecipe* Recipe =
+        GetCurrentRecipe();
+
+    if (!Recipe)
+        return;
+
+    CurrentProductionTime +=
+        DeltaTime *
+        ProductionSpeed *
+        FMath::Max(1, Workers);
+
+    if (CurrentProductionTime >=
+        Recipe->ProductionTime)
+    {
+        CompleteRecipe();
+    }
+}
+
+void AMedievalProductionBuilding::SetupRecipes()
+{
+    Recipes.Empty();
+
+    if (ProductionType ==
+        EProductionType::Blacksmith)
+    {
+        FProductionRecipe Sword;
+
+        Sword.RecipeName =
+            TEXT("Forge Sword");
+
+        Sword.Inputs = {
+
+            { EItemType::Iron, 2 },
+            { EItemType::Planks, 1 }
+
+        };
+
+        Sword.Outputs = {
+
+            { EItemType::Swords, 1 }
+
+        };
+
+        Sword.ProductionTime = 45.0f;
+
+        Recipes.Add(Sword);
+
+
+        FProductionRecipe Spear;
+
+        Spear.RecipeName =
+            TEXT("Forge Spear");
+
+        Spear.Inputs = {
+
+            { EItemType::Iron, 1 },
+            { EItemType::Planks, 1 }
+
+        };
+
+        Spear.Outputs = {
+
+            { EItemType::Spears, 2 }
+
+        };
+
+        Spear.ProductionTime = 25.0f;
+
+        Recipes.Add(Spear);
+
+
+        FProductionRecipe Halberd;
+
+        Halberd.RecipeName =
+            TEXT("Forge Halberd");
+
+        Halberd.Inputs = {
+
+            { EItemType::Iron, 3 },
+            { EItemType::Planks, 2 }
+
+        };
+
+        Halberd.Outputs = {
+
+            { EItemType::Halberds, 1 }
+
+        };
+
+        Halberd.ProductionTime = 60.0f;
+
+        Recipes.Add(Halberd);
+
+
+        FProductionRecipe Pike;
+
+        Pike.RecipeName =
+            TEXT("Forge Pike");
+
+        Pike.Inputs = {
+
+            { EItemType::Iron, 1 },
+            { EItemType::Planks, 2 }
+
+        };
+
+        Pike.Outputs = {
+
+            { EItemType::Pikes, 1 }
+
+        };
+
+        Pike.ProductionTime = 40.0f;
+
+        Recipes.Add(Pike);
+    }
+}
+
+void AMedievalProductionBuilding::SetupShieldwrightRecipes()
+{
+    FProductionRecipe LargeShield;
+
+    LargeShield.RecipeName =
+        TEXT("Large Shield");
+
+    LargeShield.Inputs = {
+
+        { EItemType::Planks, 3 }
+
+    };
+
+    LargeShield.Outputs = {
+
+        { EItemType::LargeShield, 1 }
+
+    };
+
+    LargeShield.ProductionTime = 40.0f;
+
+
+    FProductionRecipe SmallShield;
+
+    SmallShield.RecipeName =
+        TEXT("Small Shield");
+
+    SmallShield.Inputs = {
+
+        { EItemType::Planks, 2 }
+
+    };
+
+    SmallShield.Outputs = {
+
+        { EItemType::SmallShield, 1 }
+
+    };
+
+    SmallShield.ProductionTime = 30.0f;
+
+    Recipes.Add(LargeShield);
+    Recipes.Add(SmallShield);
+}
+void AMedievalProductionBuilding::SetupArmorerRecipes()
+{
+    FProductionRecipe Mail;
+
+    Mail.RecipeName =
+        TEXT("Forge Mail Armor");
+
+    Mail.Inputs = {
+
+        { EItemType::Iron, 8 }
+
+    };
+
+    Mail.Outputs = {
+
+        { EItemType::MailArmor, 1 }
+
+    };
+
+    Mail.ProductionTime = 120.0f;
+
+
+    FProductionRecipe Plate;
+
+    Plate.RecipeName =
+        TEXT("Forge Plate Armor");
+
+    Plate.Inputs = {
+
+        { EItemType::Iron, 15 }
+
+    };
+
+    Plate.Outputs = {
+
+        { EItemType::PlateArmor, 1 }
+
+    };
+
+    Plate.ProductionTime = 180.0f;
+
+
+    FProductionRecipe Helmet;
+
+    Helmet.RecipeName =
+        TEXT("Forge Helmet");
+
+    Helmet.Inputs = {
+
+        { EItemType::Iron, 4 }
+
+    };
+
+    Helmet.Outputs = {
+
+        { EItemType::Helmet, 1 }
+
+    };
+
+    Helmet.ProductionTime = 60.0f;
+
+    Recipes.Add(Mail);
+    Recipes.Add(Plate);
+    Recipes.Add(Helmet);
+}
+
+void AMedievalProductionBuilding::SetupWeaverRecipes()
+{
+    FProductionRecipe Gambeson;
+
+    Gambeson.RecipeName =
+        TEXT("Make Gambeson");
+
+    Gambeson.Inputs = {
+
+        { EItemType::Flax, 4 }
+
+    };
+
+    Gambeson.Outputs = {
+
+        { EItemType::Gambeson, 1 }
+
+    };
+
+    Gambeson.ProductionTime = 75.0f;
+
+
+    FProductionRecipe Linen;
+
+    Linen.RecipeName =
+        TEXT("Make Linen Clothing");
+
+    Linen.Inputs = {
+
+        { EItemType::Flax, 3 }
+
+    };
+
+    Linen.Outputs = {
+
+        { EItemType::LinenClothing, 1 }
+
+    };
+
+    Linen.ProductionTime = 60.0f;
+
+    Recipes.Add(Gambeson);
+    Recipes.Add(Linen);
+}
+9. Villagers physically transporting resources
+
+This is the part that makes the economy visible in the world.
+
+// ResourceCarrier.h
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Character.h"
+#include "MedievalProductionTypes.h"
+#include "ResourceCarrier.generated.h"
+
+UENUM(BlueprintType)
+enum class EWorkerState : uint8
+{
+    Idle,
+
+    WalkingToStockpile,
+    Loading,
+
+    CarryingResource,
+    WalkingToConstruction,
+
+    Unloading,
+
+    Working,
+
+    ReturningHome
+};
+
+UCLASS()
+class MEDIEVALGAME_API AResourceCarrier
+    : public ACharacter
+{
+    GENERATED_BODY()
+
+public:
+
+    AResourceCarrier();
+
+    virtual void Tick(
+        float DeltaTime
+    ) override;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    EWorkerState WorkerState =
+        EWorkerState::Idle;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    EItemType CarriedItem =
+        EItemType::None;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 CarriedAmount = 0;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 CarryCapacity = 1;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    AActor* CurrentConstructionSite;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    AActor* CurrentStockpile;
+
+    UFUNCTION(BlueprintCallable)
+    void StartResourceJob(
+        EItemType Resource,
+        AActor* Stockpile,
+        AActor* Destination
+    );
+
+    UFUNCTION(BlueprintCallable)
+    void LoadResource();
+
+    UFUNCTION(BlueprintCallable)
+    void DeliverResource();
+
+private:
+
+    void WalkToActor(AActor* Target);
+
+    void UpdateWorkerAnimation();
+};
+
+The worker's state machine becomes:
+
+IDLE
+ ↓
+WALK TO STOCKPILE
+ ↓
+LOAD RESOURCE
+ ↓
+PICK UP LOG / STONE / IRON / FLAX
+ ↓
+CARRY RESOURCE
+ ↓
+WALK TO DESTINATION
+ ↓
+UNLOAD
+ ↓
+RESOURCE ENTERS BUILDING INVENTORY
+ ↓
+RETURN TO STOCKPILE
+ ↓
+REPEAT
+
+For example:
+
+void AResourceCarrier::LoadResource()
+{
+    if (!CurrentStockpile)
+        return;
+
+    CarriedItem =
+        EItemType::Logs;
+
+    CarriedAmount =
+        FMath::Min(
+            CarryCapacity,
+            1
+        );
+
+    WorkerState =
+        EWorkerState::CarryingResource;
+
+    UpdateWorkerAnimation();
+}
+
+void AResourceCarrier::DeliverResource()
+{
+    if (!CurrentConstructionSite)
+        return;
+
+    if (CarriedAmount <= 0)
+        return;
+
+    /*
+       Send the resource into the
+       construction site's inventory.
+    */
+
+    // ConstructionSite->ReceiveMaterial(
+    //     CarriedItem,
+    //     CarriedAmount
+    // );
+
+    CarriedAmount = 0;
+
+    CarriedItem =
+        EItemType::None;
+
+    WorkerState =
+        EWorkerState::ReturningHome;
+
+    UpdateWorkerAnimation();
+}
+
+UCLASS()
+class MEDIEVALGAME_API AMedievalVillager
+    : public ACharacter
+{
+    GENERATED_BODY()
+
+public:
+
+    UPROPERTY(VisibleAnywhere)
+    USkeletalMeshComponent* Body;
+
+    UPROPERTY(VisibleAnywhere)
+    USkeletalMeshComponent* Clothing;
+
+    UPROPERTY(VisibleAnywhere)
+    USkeletalMeshComponent* Hair;
+
+    UPROPERTY(VisibleAnywhere)
+    USkeletalMeshComponent* Boots;
+
+    UPROPERTY(VisibleAnywhere)
+    USkeletalMeshComponent* Gloves;
+
+    UPROPERTY(VisibleAnywhere)
+    USkeletalMeshComponent* Helmet;
+
+    UPROPERTY(VisibleAnywhere)
+    USkeletalMeshComponent* MailArmor;
+
+    UPROPERTY(VisibleAnywhere)
+    USkeletalMeshComponent* PlateArmor;
+
+    UPROPERTY(VisibleAnywhere)
+    USkeletalMeshComponent* Shield;
+
+    UPROPERTY(VisibleAnywhere)
+    USkeletalMeshComponent* Weapon;
+
+    UPROPERTY(VisibleAnywhere)
+    USceneComponent* BackCarryPoint;
+
+    UPROPERTY(VisibleAnywhere)
+    USceneComponent* HandCarryPoint;
+
+    UPROPERTY(VisibleAnywhere)
+    USceneComponent* BeltPoint;
+
+    UPROPERTY(VisibleAnywhere)
+    USceneComponent* HeadPoint;
+};
