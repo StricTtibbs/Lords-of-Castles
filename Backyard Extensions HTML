@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Medieval Settlement — Backyard Production</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: Georgia, serif;
+    background: #172016;
+    color: white;
+}
+
+#world {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background:
+        linear-gradient(rgba(55,75,45,.18),rgba(20,30,18,.5)),
+        url("start-game.png") center/cover;
+}
+
+/* ---------------- HUD ---------------- */
+
+#hud {
+    position: absolute;
+    left: 15px;
+    top: 15px;
+    width: 280px;
+    padding: 15px;
+    background: rgba(20,20,15,.92);
+    border: 2px solid #92784c;
+    z-index: 50;
+}
+
+#hud h2 {
+    margin: 0 0 12px;
+}
+
+.resource {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+}
+
+/* ---------------- BANNER ---------------- */
+
+#banner {
+    position: absolute;
+    right: 20px;
+    top: 15px;
+    width: 85px;
+    height: 115px;
+    object-fit: contain;
+    z-index: 60;
+}
+
+/* ---------------- HOUSE ---------------- */
+
+.house {
+    position: absolute;
+    width: 180px;
+    height: 140px;
+    transform: translate(-50%,-50%);
+    z-index: 10;
+}
+
+.houseWall {
+    position: absolute;
+    bottom: 20px;
+    left: 25px;
+    width: 130px;
+    height: 80px;
+    background: #9b835e;
+    border: 3px solid #4d3c29;
+}
+
+.houseRoof {
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    width: 155px;
+    height: 55px;
+    background: #543c2b;
+    clip-path: polygon(50% 0%,100% 100%,0% 100%);
+}
+
+.houseDoor {
+    position: absolute;
+    bottom: 20px;
+    left: 80px;
+    width: 25px;
+    height: 48px;
+    background: #432d1e;
+}
+
+/* ---------------- BACKYARD ---------------- */
+
+.backyard {
+    position: absolute;
+    width: 155px;
+    height: 95px;
+    background:
+        repeating-linear-gradient(
+            0deg,
+            #66764c 0px,
+            #66764c 5px,
+            #596941 6px,
+            #596941 10px
+        );
+    border: 4px solid #5a4328;
+    z-index: 5;
+}
+
+.backyardLocked {
+    opacity: .25;
+    border-style: dashed;
+}
+
+/* ---------------- GARDENS ---------------- */
+
+.garden {
+    position: absolute;
+    background: #4b3927;
+    border: 3px solid #362719;
+    overflow: hidden;
+}
+
+.gardenRow {
+    position: absolute;
+    left: 8%;
+    width: 84%;
+    height: 7px;
+    background: #302319;
+}
+
+.crop {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.carrot {
+    background: #d27a25;
+}
+
+.cabbage {
+    background: #668b45;
+}
+
+.beetroot {
+    background: #763a43;
+}
+
+.grape {
+    width: 9px;
+    height: 9px;
+    background: #5b3b75;
+}
+
+/* ---------------- ORCHARD ---------------- */
+
+.tree {
+    position: absolute;
+    width: 30px;
+    height: 45px;
+}
+
+.treeTrunk {
+    position: absolute;
+    left: 13px;
+    bottom: 0;
+    width: 6px;
+    height: 23px;
+    background: #553a23;
+}
+
+.treeCrown {
+    position: absolute;
+    left: 2px;
+    top: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #55723d;
+}
+
+/* ---------------- CHICKEN COOP ---------------- */
+
+.coop {
+    position: absolute;
+    width: 65px;
+    height: 50px;
+    background: #725239;
+    border: 3px solid #382719;
+}
+
+.coopRoof {
+    position: absolute;
+    top: -16px;
+    left: -5px;
+    width: 70px;
+    height: 25px;
+    background: #493327;
+    transform: skewX(-25deg);
+}
+
+.chicken {
+    position: absolute;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: #ddd4b8;
+}
+
+/* ---------------- WORKSHOPS ---------------- */
+
+.workshop {
+    position: absolute;
+    width: 120px;
+    height: 75px;
+    background: #73583e;
+    border: 4px solid #3e2d20;
+}
+
+.workshopRoof {
+    position: absolute;
+    top: -25px;
+    left: -7px;
+    width: 125px;
+    height: 30px;
+    background: #4d3828;
+}
+
+.workshopDoor {
+    position: absolute;
+    bottom: 0;
+    left: 47px;
+    width: 27px;
+    height: 45px;
+    background: #35251b;
+}
+
+/* ---------------- MENU ---------------- */
+
+#menu {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 7px;
+    padding: 10px;
+    background: rgba(20,20,15,.94);
+    border: 2px solid #92784c;
+    z-index: 80;
+}
+
+button {
+    background: linear-gradient(#705e40,#342d22);
+    color: white;
+    border: 1px solid #ad9564;
+    padding: 10px;
+    font-family: Georgia, serif;
+    cursor: pointer;
+}
+
+button:hover {
+    background: linear-gradient(#8b754d,#493d2c);
+}
+
+/* ---------------- INFO ---------------- */
+
+#info {
+    position: absolute;
+    right: 15px;
+    bottom: 15px;
+    width: 300px;
+    background: rgba(20,20,15,.94);
+    border: 2px solid #92784c;
+    padding: 15px;
+    z-index: 70;
+}
+
+#info h3 {
+    margin-top: 0;
+}
+
+.hidden {
+    display: none;
+}
+
+.progress {
+    width: 100%;
+    height: 13px;
+    background: #242019;
+    margin-top: 8px;
+}
+
+.progressBar {
+    height: 100%;
+    width: 0%;
+    background: #ad8c54;
+}
+
+/* ---------------- WORKERS ---------------- */
+
+.worker {
+    position: absolute;
+    width: 22px;
+    height: 48px;
+    z-index: 30;
+}
+
+.workerHead {
+    position: absolute;
+    top: 0;
+    left: 6px;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: #ae7957;
+}
+
+.workerBody {
+    position: absolute;
+    top: 10px;
+    left: 4px;
+    width: 14px;
+    height: 19px;
+    background: #645543;
+}
+
+.workerLeg {
+    position: absolute;
+    top: 28px;
+    width: 6px;
+    height: 20px;
+    background: #40372e;
+}
+
+.workerLeg1 {
+    left: 4px;
+}
+
+.workerLeg2 {
+    right: 4px;
+}
+
+.workerLoad {
+    position: absolute;
+    display: none;
+    top: 13px;
+    left: -3px;
+    width: 28px;
+    height: 13px;
+    background: #70502f;
+    border: 1px solid #c49b5b;
+}
+
+.carrying .workerLoad {
+    display: block;
+}
+</style>
+</head>
+
+<body>
+
+<div id="world">
+
+<img id="banner">
+
+<div id="hud">
+<h2>Settlement Resources</h2>
+
+<div class="resource">
+<span>Food</span>
+<span id="food">50</span>
+</div>
+
+<div class="resource">
+<span>Logs</span>
+<span id="logs">10</span>
+</div>
+
+<div class="resource">
+<span>Planks</span>
+<span id="planks">5</span>
+</div>
+
+<div class="resource">
+<span>Stone</span>
+<span id="stone">20</span>
+</div>
+
+<div class="resource">
+<span>Iron</span>
+<span id="iron">0</span>
+</div>
+
+<div class="resource">
+<span>Flax</span>
+<span id="flax">0</span>
+</div>
+
+<hr>
+
+<div class="resource">
+<span>Carrots</span>
+<span id="carrots">10</span>
+</div>
+
+<div class="resource">
+<span>Cabbages</span>
+<span id="cabbages">10</span>
+</div>
+
+<div class="resource">
+<span>Beetroot</span>
+<span id="beetroot">0</span>
+</div>
+
+<div class="resource">
+<span>Eggs</span>
+<span id="eggs">0</span>
+</div>
+
+<div class="resource">
+<span>Chicken</span>
+<span id="chicken">0</span>
+</div>
+
+<hr>
+
+<div class="resource">
+<span>Swords</span>
+<span id="swords">0</span>
+</div>
+
+<div class="resource">
+<span>Spears</span>
+<span id="spears">10</span>
+</div>
+
+<div class="resource">
+<span>Halberds</span>
+<span id="halberds">0</span>
+</div>
+
+<div class="resource">
+<span>Pikes</span>
+<span id="pikes">0</span>
+</div>
+</div>
+
+
+<div id="info">
+<h3 id="infoTitle">Select a house</h3>
+<div id="infoText">
+Large houses can receive backyard extensions.
+</div>
+
+<div class="progress">
+<div class="progressBar" id="progressBar"></div>
+</div>
+</div>
+
+
+<div id="menu">
+
+<button onclick="chooseExtension('carrot')">
+Carrot Garden
+</button>
+
+<button onclick="chooseExtension('cabbage')">
+Cabbage Garden
+</button>
+
+<button onclick="chooseExtension('beetroot')">
+Beetroot Garden
+</button>
+
+<button onclick="chooseExtension('grape')">
+Grape Garden
+</button>
+
+<button onclick="chooseExtension('herbs')">
+Herb Garden
+</button>
+
+<button onclick="chooseExtension('coop')">
+Chicken Coop
+</button>
+
+<button onclick="chooseExtension('orchard')">
+Orchard
+</button>
+
+<button onclick="chooseExtension('blacksmith')">
+Blacksmith
+</button>
+
+<button onclick="chooseExtension('shieldwright')">
+Shieldwright
+</button>
+
+<button onclick="chooseExtension('armorer')">
+Armorer
+</button>
+
+<button onclick="chooseExtension('weaver')">
+Weaver
+</button>
+
+</div>
+
+</div>
+
+
+<script>
+
+/* ---------------- BANNER ---------------- */
+
+const selectedBanner =
+localStorage.getItem("chosenBanner");
+
+if(selectedBanner){
+    document.getElementById("banner").src =
+        selectedBanner;
+}
+
+
+/* ---------------- RESOURCES ---------------- */
+
+const resources = {
+
+    food: 50,
+
+    logs: 10,
+
+    planks: 5,
+
+    stone: 20,
+
+    iron: 0,
+
+    flax: 0,
+
+    carrots: 10,
+
+    cabbages: 10,
+
+    beetroot: 0,
+
+    grapes: 0,
+
+    herbs: 0,
+
+    eggs: 0,
+
+    chicken: 0,
+
+    swords: 0,
+
+    spears: 10,
+
+    halberds: 0,
+
+    pikes: 0,
+
+    largeShields: 0,
+
+    smallShields: 0,
+
+    mail: 0,
+
+    plate: 0,
+
+    helmets: 0,
+
+    gambesons: 0,
+
+    linen: 0
+};
+
+
+/* ---------------- HOUSES ---------------- */
+
+const houses = [
+
+    {
+        x: 450,
+        y: 350,
+
+        size: "large",
+
+        backyard: true,
+
+        backyardSize: 1
+    },
+
+    {
+        x: 700,
+        y: 420,
+
+        size: "large",
+
+        backyard: true,
+
+        backyardSize: 1
+    },
+
+    {
+        x: 930,
+        y: 300,
+
+        size: "small",
+
+        backyard: false,
+
+        backyardSize: 0
+    }
+];
+
+
+function createHouses(){
+
+    houses.forEach((house,index)=>{
+
+        const el =
+        document.createElement("div");
+
+        el.className = "house";
+
+        el.style.left = house.x+"px";
+        el.style.top = house.y+"px";
+
+        el.innerHTML = `
+
+            <div class="houseRoof"></div>
+
+            <div class="houseWall"></div>
+
+            <div class="houseDoor"></div>
+        `;
+
+        world.appendChild(el);
+
+        house.element = el;
+
+        if(house.backyard){
+
+            createBackyard(house,index);
+
+        }
+
+    });
+}
+
+
+function createBackyard(house,index){
+
+    const yard =
+    document.createElement("div");
+
+    yard.className = "backyard";
+
+    yard.style.left =
+        (house.x - 77) + "px";
+
+    yard.style.top =
+        (house.y + 70) + "px";
+
+    world.appendChild(yard);
+
+    house.backyardElement = yard;
+}
+
+
+createHouses();
+
+
+/* ---------------- WORKERS ---------------- */
+
+const workers = [];
+
+for(let i=0;i<12;i++){
+
+    const worker =
+    document.createElement("div");
+
+    worker.className = "worker";
+
+    worker.innerHTML = `
+        <div class="workerHead"></div>
+        <div class="workerBody"></div>
+        <div class="workerLeg workerLeg1"></div>
+        <div class="workerLeg workerLeg2"></div>
+        <div class="workerLoad"></div>
+    `;
+
+    world.appendChild(worker);
+
+    workers.push({
+
+        element: worker,
+
+        x: 250 + i*20,
+
+        y: 600,
+
+        targetX: null,
+
+        targetY: null,
+
+        speed: .7,
+
+        state: "idle",
+
+        production: null
+    });
+}
+
+
+/* ---------------- EXTENSIONS ---------------- */
+
+let selectedExtension = null;
+
+function chooseExtension(type){
+
+    selectedExtension = type;
+
+    document.getElementById("infoTitle")
+        .textContent =
+        "Select a large house";
+
+    document.getElementById("infoText")
+        .textContent =
+        "Click the backyard of a qualifying house.";
+
+}
+
+
+/* ---------------- CLICK BACKYARD ---------------- */
+
+world.addEventListener("click",function(e){
+
+    if(!selectedExtension)
+        return;
+
+    const yard =
+        e.target.closest(".backyard");
+
+    if(!yard)
+        return;
+
+    const house =
+        houses.find(h =>
+            h.backyardElement === yard
+        );
+
+    if(!house)
+        return;
+
+    if(!house.backyard){
+
+        alert(
+            "This house is too small for a backyard."
+        );
+
+        return;
+    }
+
+    buildExtension(
+        house,
+        selectedExtension
+    );
+
+    selectedExtension = null;
+});
+
+
+/* ---------------- BUILD EXTENSION ---------------- */
+
+function buildExtension(
+    house,
+    type
+){
+
+    const yard =
+        house.backyardElement;
+
+    if(yard.dataset.used === "true"){
+
+        alert(
+            "This backyard already has an extension."
+        );
+
+        return;
+    }
+
+    yard.dataset.used = "true";
+
+    switch(type){
+
+        case "carrot":
+        case "cabbage":
+        case "beetroot":
+        case "grape":
+        case "herbs":
+
+            createGarden(
+                yard,
+                type
+            );
+
+            break;
+
+        case "coop":
+
+            createChickenCoop(yard);
+
+            break;
+
+        case "orchard":
+
+            createOrchard(yard);
+
+            break;
+
+        case "blacksmith":
+
+            createWorkshop(
+                yard,
+                "Blacksmith"
+            );
+
+            break;
+
+        case "shieldwright":
+
+            createWorkshop(
+                yard,
+                "Shieldwright"
+            );
+
+            break;
+
+        case "armorer":
+
+            createWorkshop(
+                yard,
+                "Armorer"
+            );
+
+            break;
+
+        case "weaver":
+
+            createWorkshop(
+                yard,
+                "Weaver"
+            );
+
+            break;
+    }
+
+    assignWorker(type);
+
+}
+
+
+/* ---------------- GARDEN ---------------- */
+
+function createGarden(
+    yard,
+    cropType
+){
+
+    const garden =
+        document.createElement("div");
+
+    garden.className = "garden";
+
+    garden.style.left = "15px";
+    garden.style.top = "12px";
+    garden.style.width = "125px";
+    garden.style.height = "70px";
+
+    for(let r=0;r<4;r++){
+
+        const row =
+            document.createElement("div");
+
+        row.className =
+            "gardenRow";
+
+        row.style.top =
+            (10+r*15)+"px";
+
+        garden.appendChild(row);
+
+    }
+
+    /*
+       Larger gardens can simply use
+       more crop plants.
+    */
+
+    const numberOfPlants = 20;
+
+    for(let i=0;i<numberOfPlants;i++){
+
+        const crop =
+            document.createElement("div");
+
+        crop.className =
+            "crop "+cropType;
+
+        crop.style.left =
+            (10 + Math.random()*105)+"px";
+
+        crop.style.top =
+            (8 + Math.random()*55)+"px";
+
+        garden.appendChild(crop);
+    }
+
+    yard.appendChild(garden);
+}
+
+
+/* ---------------- CHICKEN COOP ---------------- */
+
+function createChickenCoop(yard){
+
+    const coop =
+        document.createElement("div");
+
+    coop.className = "coop";
+
+    coop.style.left = "45px";
+    coop.style.top = "22px";
+
+    coop.innerHTML =
+        `<div class="coopRoof"></div>`;
+
+    for(let i=0;i<3;i++){
+
+        const chicken =
+            document.createElement("div");
+
+        chicken.className =
+            "chicken";
+
+        chicken.style.left =
+            (10+Math.random()*70)+"px";
+
+        chicken.style.top =
+            (20+Math.random()*60)+"px";
+
+        yard.appendChild(chicken);
+    }
+
+    yard.appendChild(coop);
+}
+
+
+/* ---------------- ORCHARD ---------------- */
+
+function createOrchard(yard){
+
+    for(let i=0;i<6;i++){
+
+        const tree =
+            document.createElement("div");
+
+        tree.className = "tree";
+
+        tree.style.left =
+            (10 + (i%3)*42)+"px";
+
+        tree.style.top =
+            (5 + Math.floor(i/3)*45)+"px";
+
+        tree.innerHTML = `
+            <div class="treeCrown"></div>
+            <div class="treeTrunk"></div>
+        `;
+
+        yard.appendChild(tree);
+    }
+}
+
+
+/* ---------------- WORKSHOPS ---------------- */
+
+function createWorkshop(
+    yard,
+    name
+){
+
+    const workshop =
+        document.createElement("div");
+
+    workshop.className =
+        "workshop";
+
+    workshop.style.left = "17px";
+    workshop.style.top = "10px";
+
+    workshop.innerHTML = `
+
+        <div class="workshopRoof"></div>
+
+        <div class="workshopDoor"></div>
+
+    `;
+
+    yard.appendChild(workshop);
+
+    workshop.title = name;
+}
+
+
+/* ---------------- WORK ASSIGNMENT ---------------- */
+
+function assignWorker(type){
+
+    const worker =
+        workers.find(
+            w => w.state === "idle"
+        );
+
+    if(!worker)
+        return;
+
+    worker.state = "working";
+
+    worker.production = type;
+
+    /*
+       Send worker toward the
+       settlement storage/work area.
+    */
+
+    worker.targetX = 180;
+    worker.targetY = 500;
+
+}
+
+
+/* ---------------- PRODUCTION ---------------- */
+
+setInterval(()=>{
+
+    houses.forEach(house=>{
+
+        if(!house.backyardElement)
+            return;
+
+        const children =
+            house.backyardElement.children;
+
+        if(children.length === 0)
+            return;
+
+        /*
+           Backyard production scales
+           with available garden/workspace.
+        */
+
+        for(const child of children){
+
+            if(child.classList.contains("garden")){
+
+                const crops =
+                    child.querySelectorAll(".crop");
+
+                const output =
+                    Math.max(
+                        1,
+                        Math.floor(
+                            crops.length / 8
+                        )
+                    );
+
+                /*
+                   Production type is determined
+                   by crop class.
+                */
+
+                if(child.querySelector(".carrot"))
+                    resources.carrots += output;
+
+                if(child.querySelector(".cabbage"))
+                    resources.cabbages += output;
+
+                if(child.querySelector(".beetroot"))
+                    resources.beetroot += output;
+
+                if(child.querySelector(".grape"))
+                    resources.grapes += output;
+
+                if(child.querySelector(".herbs"))
+                    resources.herbs += output;
+            }
+
+            if(child.classList.contains("coop")){
+
+                resources.eggs += 2;
+                resources.chicken += 1;
+            }
+
+        }
+
+    });
+
+    updateHUD();
+
+},10000);
+
+
+/* ---------------- WORKSHOP PRODUCTION ---------------- */
+
+function produceWorkshop(type){
+
+    if(type === "blacksmith"){
+
+        if(
+            resources.iron >= 2 &&
+            resources.planks >= 1
+        ){
+
+            resources.iron -= 2;
+            resources.planks -= 1;
+
+            resources.swords++;
+        }
+
+    }
+
+    if(type === "shieldwright"){
+
+        if(resources.planks >= 2){
+
+            resources.planks -= 2;
+
+            resources.largeShields++;
+            resources.smallShields++;
+        }
+
+    }
+
+    if(type === "armorer"){
+
+        if(resources.iron >= 4){
+
+            resources.iron -= 4;
+
+            resources.mail++;
+            resources.plate++;
+            resources.helmets++;
+        }
+
+    }
+
+    if(type === "weaver"){
+
+        if(resources.flax >= 3){
+
+            resources.flax -= 3;
+
+            resources.gambesons++;
+            resources.linen++;
+        }
+
+    }
+
+}
+
+
+/* ---------------- HUD ---------------- */
+
+function updateHUD(){
+
+    for(const key in resources){
+
+        const element =
+            document.getElementById(key);
+
+        if(element){
+
+            element.textContent =
+                resources[key];
+        }
+    }
+}
+
+
+/* ---------------- MOVEMENT ---------------- */
+
+function updateWorkers(){
+
+    workers.forEach(worker=>{
+
+        if(worker.targetX === null)
+            return;
+
+        const dx =
+            worker.targetX-worker.x;
+
+        const dy =
+            worker.targetY-worker.y;
+
+        const distance =
+            Math.sqrt(dx*dx+dy*dy);
+
+        if(distance < 3){
+
+            worker.targetX = null;
+            worker.targetY = null;
+
+            worker.state = "idle";
+
+            return;
+        }
+
+        worker.x +=
+            dx/distance*worker.speed;
+
+        worker.y +=
+            dy/distance*worker.speed;
+
+        worker.element.style.left =
+            worker.x+"px";
+
+        worker.element.style.top =
+            worker.y+"px";
+    });
+
+    requestAnimationFrame(updateWorkers);
+}
+
+updateWorkers();
+
+
+/* ---------------- CAMERA ---------------- */
+
+let cameraX = 0;
+let cameraY = 0;
+let rotation = 0;
+
+document.addEventListener(
+"keydown",
+function(e){
+
+    const key =
+        e.key.toLowerCase();
+
+    if(key === "w")
+        cameraY -= 20;
+
+    if(key === "c")
+        cameraY += 20;
+
+    if(key === "a")
+        cameraX -= 20;
+
+    if(key === "d")
+        cameraX += 20;
+
+    if(key === "q")
+        rotation -= 5;
+
+    if(key === "e")
+        rotation += 5;
+
+    if(key === "r")
+        rotation += 15;
+
+    if(key === "m"){
+
+        alert(
+            "Settlement map opened."
+        );
+    }
+
+    world.style.backgroundPosition =
+        `${50+cameraX/20}% ${50+cameraY/20}%`;
+});
+
+</script>
+
+</body>
+</html>
