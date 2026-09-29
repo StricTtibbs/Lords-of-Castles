@@ -1,0 +1,783 @@
+if(savedBanner){
+
+    document
+        .getElementById("banner")
+        .src=savedBanner;
+
+}
+
+
+/* =========================================================
+   TERRAIN GENERATION
+========================================================= */
+
+const terrain =
+    document.getElementById("terrain");
+
+
+function random(min,max){
+
+    return Math.random()
+        *(max-min)+min;
+
+}
+
+
+/* =========================================================
+   GRASS
+========================================================= */
+
+for(let i=0;i<1500;i++){
+
+    const grass =
+        document.createElement("div");
+
+    grass.className="grass";
+
+    grass.style.left =
+        random(0,100)+"%";
+
+    grass.style.top =
+        random(0,100)+"%";
+
+    grass.style.setProperty(
+        "--wind",
+        random(3,12)
+    );
+
+    grass.style.setProperty(
+        "--speed",
+        random(1.5,4)+"s"
+    );
+
+    terrain.appendChild(grass);
+
+}
+
+
+/* =========================================================
+   TREES
+========================================================= */
+
+for(let i=0;i<80;i++){
+
+    const tree =
+        document.createElement("div");
+
+    tree.className="tree";
+
+    tree.style.left =
+        random(2,98)+"%";
+
+    tree.style.top =
+        random(2,98)+"%";
+
+    tree.style.setProperty(
+        "--treespeed",
+        random(3,7)+"s"
+    );
+
+
+    const trunk =
+        document.createElement("div");
+
+    trunk.className="trunk";
+
+
+    const canopy =
+        document.createElement("div");
+
+    canopy.className="canopy";
+
+
+    tree.appendChild(canopy);
+
+    tree.appendChild(trunk);
+
+    terrain.appendChild(tree);
+
+}
+
+
+/* =========================================================
+   CAMERA
+========================================================= */
+
+const keys={};
+
+
+document.addEventListener(
+    "keydown",
+    e=>{
+
+        const k =
+            e.key.toLowerCase();
+
+        keys[k]=true;
+
+
+        if(
+            [
+                "w","a","s",
+                "d","c","q",
+                "e","r","m"
+            ].includes(k)
+        ){
+
+            e.preventDefault();
+
+        }
+
+
+        if(k==="r" && !e.repeat){
+
+            rotateStructure();
+
+        }
+
+
+        if(k==="m" && !e.repeat){
+
+            toggleMap();
+
+        }
+
+    }
+);
+
+
+document.addEventListener(
+    "keyup",
+    e=>{
+
+        keys[
+            e.key.toLowerCase()
+        ]=false;
+
+    }
+);
+
+
+function cameraUpdate(){
+
+    if(keys.w)
+        state.cameraY+=8;
+
+    if(keys.c)
+        state.cameraY-=8;
+
+    if(keys.a)
+        state.cameraX+=8;
+
+    if(keys.d)
+        state.cameraX-=8;
+
+    if(keys.q)
+        state.cameraRotation-=1.5;
+
+    if(keys.e)
+        state.cameraRotation+=1.5;
+
+
+    terrain.style.transform=
+        `
+        translate(
+            ${state.cameraX}px,
+            ${state.cameraY}px
+        )
+        rotate(
+            ${state.cameraRotation}deg
+        )
+        `;
+
+
+    requestAnimationFrame(
+        cameraUpdate
+    );
+
+}
+
+
+cameraUpdate();
+
+
+/* =========================================================
+   STARTING FIVE FAMILIES
+========================================================= */
+
+const families=[
+
+    {x:48,y:46},
+    {x:54,y:46},
+    {x:48,y:54},
+    {x:54,y:54},
+    {x:51,y:60}
+
+];
+
+
+families.forEach(
+    (family,index)=>{
+
+        createTent(
+            family.x,
+            family.y,
+            index+1
+        );
+
+    }
+);
+
+
+function createTent(x,y,id){
+
+    const tent =
+        document.createElement("div");
+
+    tent.className="tent";
+
+    tent.style.left=x+"%";
+
+    tent.style.top=y+"%";
+
+
+    const body =
+        document.createElement("div");
+
+    body.className="tentBody";
+
+
+    const opening =
+        document.createElement("div");
+
+    opening.className="tentOpening";
+
+
+    tent.appendChild(body);
+
+    tent.appendChild(opening);
+
+    terrain.appendChild(tent);
+
+}
+
+
+/* =========================================================
+   BUILDING SELECTION
+========================================================= */
+
+const buttons =
+    document.querySelectorAll(
+        ".buildButton"
+    );
+
+
+buttons.forEach(button=>{
+
+    button.addEventListener(
+        "click",
+        ()=>{
+
+            buttons.forEach(
+                b=>
+                b.classList.remove(
+                    "selected"
+                )
+            );
+
+            button.classList.add(
+                "selected"
+            );
+
+            state.selectedBuilding =
+                button.dataset.building;
+
+            showMessage(
+                "Place your "+
+                state.selectedBuilding
+            );
+
+        }
+    );
+
+});
+
+
+/* =========================================================
+   BUILDING PLACEMENT
+========================================================= */
+
+document.addEventListener(
+    "click",
+    e=>{
+
+        if(
+            !state.selectedBuilding
+        )
+            return;
+
+
+        if(
+            e.target.closest(
+                "#buildMenu"
+            ) ||
+            e.target.closest(
+                "#hud"
+            ) ||
+            e.target.closest(
+                "#controls"
+            ) ||
+            e.target.closest(
+                "#banner"
+            )
+        )
+            return;
+
+
+        createBuilding(
+            e.clientX,
+            e.clientY,
+            state.selectedBuilding
+        );
+
+    }
+);
+
+
+/* =========================================================
+   DETAILED BUILDING
+========================================================= */
+
+function createBuilding(
+    x,
+    y,
+    type
+){
+
+    const building =
+        document.createElement("div");
+
+    building.className=
+        "building";
+
+    building.style.left=
+        x+"px";
+
+    building.style.top=
+        y+"px";
+
+    building.style.transform=
+        `
+        translate(-50%,-50%)
+        rotate(
+            ${state.structureRotation}deg
+        )
+        `;
+
+
+    /* foundation */
+
+    const foundation =
+        document.createElement("div");
+
+    foundation.className=
+        "foundation";
+
+
+    /* wall */
+
+    const wall =
+        document.createElement("div");
+
+    wall.className=
+        "wall";
+
+
+    /* roof */
+
+    const roof =
+        document.createElement("div");
+
+    roof.className=
+        "roof";
+
+
+    /* door */
+
+    const door =
+        document.createElement("div");
+
+    door.className=
+        "door";
+
+
+    /* windows */
+
+    const windowLeft =
+        document.createElement("div");
+
+    windowLeft.className=
+        "window left";
+
+
+    const windowRight =
+        document.createElement("div");
+
+    windowRight.className=
+        "window right";
+
+
+    /* timber */
+
+    const v1 =
+        document.createElement("div");
+
+    v1.className=
+        "beam vertical1";
+
+
+    const v2 =
+        document.createElement("div");
+
+    v2.className=
+        "beam vertical2";
+
+
+    const horizontal =
+        document.createElement("div");
+
+    horizontal.className=
+        "beam horizontal";
+
+
+    const diagonal1 =
+        document.createElement("div");
+
+    diagonal1.className=
+        "beam diagonal1";
+
+
+    const diagonal2 =
+        document.createElement("div");
+
+    diagonal2.className=
+        "beam diagonal2";
+
+
+    /* chimney */
+
+    const chimney =
+        document.createElement("div");
+
+    chimney.className=
+        "chimney";
+
+
+    building.appendChild(
+        foundation
+    );
+
+    building.appendChild(
+        wall
+    );
+
+    building.appendChild(
+        roof
+    );
+
+    building.appendChild(
+        door
+    );
+
+    building.appendChild(
+        windowLeft
+    );
+
+    building.appendChild(
+        windowRight
+    );
+
+    building.appendChild(
+        v1
+    );
+
+    building.appendChild(
+        v2
+    );
+
+    building.appendChild(
+        horizontal
+    );
+
+    building.appendChild(
+        diagonal1
+    );
+
+    building.appendChild(
+        diagonal2
+    );
+
+    building.appendChild(
+        chimney
+    );
+
+
+    /* building-specific appearance */
+
+    if(type==="Granary"){
+
+        building.style.transform+=
+            " scale(1.08)";
+
+        roof.style.background=
+            "linear-gradient(150deg,#6d4d2d,#986e3c,#49301e)";
+
+    }
+
+
+    if(type==="Storehouse"){
+
+        wall.style.background=
+            "linear-gradient(90deg,#806c52,#a28b68,#665541)";
+
+    }
+
+
+    if(type==="Blacksmith"){
+
+        chimney.style.height="60px";
+
+        chimney.style.background=
+            "#4a4640";
+
+    }
+
+
+    if(type==="Barracks"){
+
+        building.style.transform+=
+            " scale(1.25)";
+
+    }
+
+
+    terrain.appendChild(
+        building
+    );
+
+
+    state.selectedBuilding=null;
+
+    buttons.forEach(
+        b=>
+        b.classList.remove(
+            "selected"
+        )
+    );
+
+
+    showMessage(
+        type+
+        " foundation placed"
+    );
+
+}
+
+
+/* =========================================================
+   ROTATE STRUCTURE
+========================================================= */
+
+function rotateStructure(){
+
+    if(
+        !state.selectedBuilding
+    )
+        return;
+
+
+    state.structureRotation+=15;
+
+
+    if(
+        state.structureRotation>=360
+    ){
+
+        state.structureRotation=0;
+
+    }
+
+
+    showMessage(
+        "Structure rotation: "+
+        state.structureRotation+
+        "°"
+    );
+
+}
+
+
+/* =========================================================
+   MAP
+========================================================= */
+
+function toggleMap(){
+
+    const map =
+        document.getElementById(
+            "map"
+        );
+
+    map.style.display =
+        map.style.display==="flex"
+        ? "none"
+        : "flex";
+
+}
+
+
+document
+    .getElementById("closeMap")
+    .onclick=()=>{
+
+        document
+            .getElementById("map")
+            .style.display="none";
+
+    };
+
+
+/* =========================================================
+   MILITIA
+========================================================= */
+
+document
+    .getElementById(
+        "militiaButton"
+    )
+    .onclick=()=>{
+
+        if(state.population<20){
+
+            showMessage(
+                "You need 20 people to raise the militia."
+            );
+
+            return;
+
+        }
+
+
+        if(state.shields<=0){
+
+            showMessage(
+                "You need shields."
+            );
+
+            return;
+
+        }
+
+
+        if(state.spears<=0){
+
+            showMessage(
+                "You need spears."
+            );
+
+            return;
+
+        }
+
+
+        state.militia++;
+
+        state.population-=20;
+
+        state.shields--;
+
+        state.spears--;
+
+        updateHUD();
+
+        showMessage(
+            "Militia raised."
+        );
+
+    };
+
+
+/* =========================================================
+   HUD
+========================================================= */
+
+function updateHUD(){
+
+    document.getElementById("food")
+        .textContent=state.food;
+
+    document.getElementById("carp")
+        .textContent=state.carp;
+
+    document.getElementById("bread")
+        .textContent=state.bread;
+
+    document.getElementById("carrots")
+        .textContent=state.carrots;
+
+    document.getElementById("cabbages")
+        .textContent=state.cabbages;
+
+    document.getElementById("logs")
+        .textContent=state.logs;
+
+    document.getElementById("stone")
+        .textContent=state.stone;
+
+    document.getElementById("shields")
+        .textContent=state.shields;
+
+    document.getElementById("spears")
+        .textContent=state.spears;
+
+    document.getElementById("population")
+        .textContent=state.population;
+
+}
+
+
+updateHUD();
+
+
+/* =========================================================
+   MESSAGE
+========================================================= */
+
+let messageTimer;
+
+
+function showMessage(text){
+
+    const message =
+        document.getElementById(
+            "message"
+        );
+
+    message.textContent=text;
+
+    message.style.display="block";
+
+    clearTimeout(
+        messageTimer
+    );
+
+    messageTimer=
+        setTimeout(
+            ()=>{
+                message.style.display=
+                    "none";
+            },
+            1800
+        );
+
+}
