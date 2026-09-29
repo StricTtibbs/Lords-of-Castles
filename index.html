@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lords of Castles — Prototype Gallery</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    min-height: 100vh;
+    font-family: Georgia, "Times New Roman", serif;
+    color: #ead8b2;
+    background:
+        radial-gradient(circle at center, #4b4638 0%, #25231d 55%, #14120f 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+h1 {
+    font-size: 48px;
+    letter-spacing: 4px;
+    text-shadow: 0 4px 12px rgba(0,0,0,.6);
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    font-size: 18px;
+    color: #b89a6a;
+    letter-spacing: 2px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    width: 100%;
+    max-width: 1000px;
+}
+
+.card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    padding: 24px;
+    background: linear-gradient(180deg, rgba(61,48,34,.98), rgba(25,20,15,.98));
+    border: 2px solid #957447;
+    border-radius: 6px;
+    box-shadow: 0 6px 20px rgba(0,0,0,.5);
+    transition: transform .15s, box-shadow .15s, border-color .15s;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 30px rgba(0,0,0,.65);
+    border-color: #c9a66b;
+}
+
+.card h2 {
+    font-size: 20px;
+    color: #f0ddb3;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+}
+
+.card p {
+    font-size: 14px;
+    color: #a89270;
+    line-height: 1.5;
+}
+
+.card .tag {
+    display: inline-block;
+    margin-top: 12px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #c9a66b;
+    border: 1px solid #755a37;
+    border-radius: 3px;
+    padding: 3px 10px;
+}
+</style>
+</head>
+<body>
+<header>
+    <h1>⚔️ Lords of Castles</h1>
+    <p class="subtitle">Medieval Settlement — Prototype Gallery</p>
+</header>
+<div class="grid">
+    <a class="card" href="visable">
+        <h2>Settlement HUD</h2>
+        <p>The main visible settlement interface with resource stats and HUD overlay.</p>
+        <span class="tag">HTML</span>
+    </a>
+    <a class="card" href="Terrain%20generation%20HTML">
+        <h2>Terrain Generation</h2>
+        <p>Procedural medieval kingdom map with terrain generation and main menu.</p>
+        <span class="tag">HTML</span>
+    </a>
+    <a class="card" href="Backyard%20Extensions%20HTML">
+        <h2>Backyard Extensions</h2>
+        <p>Backyard production screen for the medieval settlement.</p>
+        <span class="tag">HTML</span>
+    </a>
+    <a class="card" href="Building%20menu">
+        <h2>Building Menu</h2>
+        <p>Building selection and placement menu interface.</p>
+        <span class="tag">HTML</span>
+    </a>
+    <a class="card" href="Calendar%20and%20Seasons">
+        <h2>Calendar &amp; Seasons</h2>
+        <p>Seasonal calendar system with weather and time progression.</p>
+        <span class="tag">HTML</span>
+    </a>
+    <a class="card" href="Construction%20logic%20C%2B%2B%20and%20HTML">
+        <h2>Construction Logic</h2>
+        <p>Building construction interface with placement validation.</p>
+        <span class="tag">HTML</span>
+    </a>
+    <a class="card" href="Militia%20Requirements">
+        <h2>Militia Requirements</h2>
+        <p>Military unit requirements and recruitment interface.</p>
+        <span class="tag">HTML</span>
+    </a>
+    <a class="card" href="Placement">
+        <h2>Placement</h2>
+        <p>Structure placement system with grid snapping and rotation.</p>
+        <span class="tag">HTML</span>
+    </a>
+    <a class="card" href="Structure%20Rotation">
+        <h2>Structure Rotation</h2>
+        <p>Building rotation controls and orientation preview.</p>
+        <span class="tag">HTML</span>
+    </a>
+    <a class="card" href="AI%20Adverseries">
+        <h2>AI Adversaries</h2>
+        <p>AI enemy behavior and adversary system interface.</p>
+        <span class="tag">HTML</span>
+    </a>
+</div>
+</body>
+</html>
