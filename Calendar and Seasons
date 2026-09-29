@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Medieval Village - Seasons</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: Georgia, serif;
+    background: #111;
+    color: white;
+}
+
+
+/* =========================================================
+   GAME WORLD
+   ========================================================= */
+
+#world {
+
+    position: fixed;
+
+    inset: 0;
+
+    transition:
+        background 3s ease,
+        filter 3s ease;
+
+}
+
+
+/* =========================================================
+   SEASON TERRAIN
+   ========================================================= */
+
+.spring {
+    background:
+        linear-gradient(
+            #9fca72,
+            #77aa55
+        );
+}
+
+.summer {
+    background:
+        linear-gradient(
+            #a8a86b,
+            #8d9652
+        );
+}
+
+.autumn {
+    background:
+        linear-gradient(
+            #c47b39,
+            #9d5c2e
+        );
+}
+
+.winter {
+    background:
+        linear-gradient(
+            #f1f3f0,
+            #d9dedb
+        );
+}
+
+
+/* =========================================================
+   TERRAIN
+   ========================================================= */
+
+.terrain {
+
+    position: absolute;
+
+    inset: 0;
+
+    background-image:
+
+        radial-gradient(
+            ellipse at center,
+            rgba(255,255,255,0.08),
+            transparent 50%
+        );
+
+    transition: 3s;
+}
+
+
+/* =========================================================
+   FALLING AUTUMN LEAVES
+   ========================================================= */
+
+#leaves {
+
+    position: absolute;
+
+    inset: 0;
+
+    pointer-events: none;
+
+    display: none;
+
+    overflow: hidden;
+}
+
+.autumn #leaves {
+    display: block;
+}
+
+.leaf {
+
+    position: absolute;
+
+    width: 10px;
+    height: 7px;
+
+    background: #b85d25;
+
+    border-radius: 70% 20% 70% 20%;
+
+    animation:
+        fall linear infinite;
+
+}
+
+@keyframes fall {
+
+    0% {
+
+        transform:
+            translateY(-20px)
+            rotate(0deg);
+
+    }
+
+    100% {
+
+        transform:
+            translateY(110vh)
+            rotate(720deg);
+
+    }
+
+}
+
+
+/* =========================================================
+   SNOW
+   ========================================================= */
+
+#snow {
+
+    position: absolute;
+
+    inset: 0;
+
+    pointer-events: none;
+
+    display: none;
+
+    overflow: hidden;
+}
+
+.winter #snow {
+    display: block;
+}
+
+.snowflake {
+
+    position: absolute;
+
+    width: 6px;
+    height: 6px;
+
+    background: white;
+
+    border-radius: 50%;
+
+    opacity: 0.85;
+
+    animation:
+        snowfall linear infinite;
+
+}
+
+@keyframes snowfall {
+
+    from {
+
+        transform:
+            translateY(-10px);
+
+    }
+
+    to {
+
+        transform:
+            translateY(110vh);
+
+    }
+
+}
+
+
+/* =========================================================
+   TOP CALENDAR
+   ========================================================= */
+
+#calendar {
+
+    position: fixed;
+
+    top: 20px;
+    left: 50%;
+
+    transform:
+        translateX(-50%);
+
+    min-width: 300px;
+
+    padding: 14px 25px;
+
+    background:
+        rgba(20,18,15,0.92);
+
+    border:
+        1px solid #8b7955;
+
+    border-radius: 6px;
+
+    text-align: center;
+
+    z-index: 100;
+
+    box-shadow:
+        0 5px 20px
+        rgba(0,0,0,0.35);
+
+}
+
+#month {
+
+    font-size: 25px;
+
+}
+
+#season {
+
+    margin-top: 4px;
+
+    font-size: 16px;
+
+}
+
+
+/* =========================================================
+   SPEED CONTROLS
+   ========================================================= */
+
+#speedControls {
+
+    position: fixed;
+
+    top: 20px;
+    right: 20px;
+
+    padding: 10px;
+
+    background:
+        rgba(20,18,15,0.92);
+
+    border:
+        1px solid #8b7955;
+
+    border-radius: 6px;
+
+    z-index: 100;
+
+}
+
+.speedButton {
+
+    padding: 8px 12px;
+
+    margin: 2px;
+
+    background: #302b23;
+
+    border:
+        1px solid #716249;
+
+    color: white;
+
+    cursor: pointer;
+
+}
+
+.speedButton:hover {
+
+    background: #4b402e;
+
+}
+
+.speedButton.active {
+
+    background: #796442;
+
+}
+
+
+/* =========================================================
+   RESOURCE INFORMATION
+   ========================================================= */
+
+#resourceInfo {
+
+    position: fixed;
+
+    bottom: 20px;
+    left: 20px;
+
+    width: 250px;
+
+    padding: 15px;
+
+    background:
+        rgba(20,18,15,0.92);
+
+    border:
+        1px solid #8b7955;
+
+    border-radius: 6px;
+
+    z-index: 100;
+
+}
+
+.resourceRow {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    padding: 5px 0;
+
+}
+
+
+/* =========================================================
+   FREEZING WARNING
+   ========================================================= */
+
+#freezingWarning {
+
+    display: none;
+
+    position: fixed;
+
+    top: 100px;
+
+    left: 50%;
+
+    transform:
+        translateX(-50%);
+
+    padding: 12px 20px;
+
+    background:
+        rgba(60,90,120,0.95);
+
+    border:
+        1px solid white;
+
+    border-radius: 5px;
+
+    z-index: 200;
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<!-- ========================================================
+     WORLD
+     ======================================================== -->
+
+<div id="world" class="spring">
+
+    <div class="terrain"></div>
+
+    <div id="leaves"></div>
+
+    <div id="snow"></div>
+
+</div>
+
+
+<!-- ========================================================
+     CALENDAR
+     ======================================================== -->
+
+<div id="calendar">
+
+    <div id="month">
+        March
+    </div>
+
+    <div id="season">
+        Spring
+    </div>
+
+</div>
+
+
+<!-- ========================================================
+     SPEED
+     ======================================================== -->
+
+<div id="speedControls">
+
+    <button
+        class="speedButton active"
+        onclick="setSpeed(1,this)">
+        1×
+    </button>
+
+    <button
+        class="speedButton"
+        onclick="setSpeed(2,this)">
+        2×
+    </button>
+
+    <button
+        class="speedButton"
+        onclick="setSpeed(5,this)">
+        5×
+    </button>
+
+    <button
+        class="speedButton"
+        onclick="setSpeed(10,this)">
+        10×
+    </button>
+
+</div>
+
+
+<!-- ========================================================
+     FREEZING
+     ======================================================== -->
+
+<div id="freezingWarning">
+
+    ❄ Freezing conditions!
+    Resource production has stopped.
+
+</div>
+
+
+<!-- ========================================================
+     RESOURCE INFORMATION
+     ======================================================== -->
+
+<div id="resourceInfo">
+
+    <strong>Resources</strong>
+
+    <div class="resourceRow">
+        <span>🐟 Carp</span>
+        <span id="carp">10</span>
+    </div>
+
+    <div class="resourceRow">
+        <span>🥩 Roast Beef</span>
+        <span id="beef">10</span>
+    </div>
+
+    <div class="resourceRow">
+        <span>🍞 Bread</span>
+        <span id="bread">10</span>
+    </div>
+
+    <div class="resourceRow">
+        <span>🥕 Carrots</span>
+        <span id="carrots">10</span>
+    </div>
+
+    <div class="resourceRow">
+        <span>🥬 Cabbages</span>
+        <span id="cabbages">10</span>
+    </div>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   CALENDAR
+   ========================================================= */
+
+const months = [
+
+    {
+        name: "March",
+        season: "Spring"
+    },
+
+    {
+        name: "April",
+        season: "Spring"
+    },
+
+    {
+        name: "May",
+        season: "Spring"
+    },
+
+    {
+        name: "June",
+        season: "Summer"
+    },
+
+    {
+        name: "July",
+        season: "Summer"
+    },
+
+    {
+        name: "August",
+        season: "Summer"
+    },
+
+    {
+        name: "September",
+        season: "Autumn"
+    },
+
+    {
+        name: "October",
+        season: "Autumn"
+    },
+
+    {
+        name: "November",
+        season: "Autumn"
+    },
+
+    {
+        name: "December",
+        season: "Winter"
+    },
+
+    {
+        name: "January",
+        season: "Winter"
+    },
+
+    {
+        name: "February",
+        season: "Winter"
+    }
+
+];
+
+
+let monthIndex = 0;
+
+
+/* =========================================================
+   SPEED
+   ========================================================= */
+
+let gameSpeed = 1;
+
+
+/*
+    One game month lasts 60 real seconds
+    at 1× speed.
+
+    2× = 30 seconds
+    5× = 12 seconds
+    10× = 6 seconds
+*/
+
+const REAL_SECONDS_PER_MONTH = 60;
+
+
+/* =========================================================
+   RESOURCES
+   ========================================================= */
+
+let resources = {
+
+    carp: 10,
+
+    beef: 10,
+
+    bread: 10,
+
+    carrots: 10,
+
+    cabbages: 10
+
+};
+
+
+/* =========================================================
+   CHANGE SPEED
+   ========================================================= */
+
+function setSpeed(speed, button) {
+
+    gameSpeed = speed;
+
+    document
+        .querySelectorAll(".speedButton")
+        .forEach(
+            b => b.classList.remove("active")
+        );
+
+    button.classList.add("active");
+
+}
+
+
+/* =========================================================
+   CHANGE SEASON
+   ========================================================= */
+
+function updateSeason() {
+
+    const current =
+        months[monthIndex];
+
+    document.getElementById(
+        "month"
+    ).textContent =
+        current.name;
+
+
+    document.getElementById(
+        "season"
+    ).textContent =
+        current.season;
+
+
+    const world =
+        document.getElementById(
+            "world"
+        );
+
+
+    world.className =
+        current.season.toLowerCase();
+
+
+    /*
+       Resource production:
+
+       Spring = enabled
+       Summer = enabled
+       Autumn = disabled
+       Winter = disabled
+    */
+
+    if (
+        current.season === "Winter"
+        ||
+        current.season === "Autumn"
+    ) {
+
+        document.getElementById(
+            "freezingWarning"
+        ).style.display =
+            "block";
+
+    }
+    else {
+
+        document.getElementById(
+            "freezingWarning"
+        ).style.display =
+            "none";
+
+    }
+
+}
+
+
+/* =========================================================
+   NEXT MONTH
+   ========================================================= */
+
+function nextMonth() {
+
+    monthIndex++;
+
+    if (
+        monthIndex >= months.length
+    ) {
+
+        monthIndex = 0;
+
+    }
+
+    updateSeason();
+
+}
+
+
+/* =========================================================
+   RESOURCE PRODUCTION
+   ========================================================= */
+
+function produceResources() {
+
+    const season =
+        months[monthIndex].season;
+
+
+    /*
+       No normal resource production
+       during Autumn or Winter.
+    */
+
+    if (
+        season === "Autumn"
+        ||
+        season === "Winter"
+    ) {
+
+        return;
+
+    }
+
+
+    /*
+       Spring production
+    */
+
+    if (
+        season === "Spring"
+    ) {
+
+        resources.carrots += 0.15;
+
+        resources.cabbages += 0.15;
+
+    }
+
+
+    /*
+       Summer production
+    */
+
+    if (
+        season === "Summer"
+    ) {
+
+        resources.carrots += 0.30;
+
+        resources.cabbages += 0.30;
+
+        resources.carp += 0.10;
+
+    }
+
+
+    updateResources();
+
+}
+
+
+/* =========================================================
+   RESOURCE DISPLAY
+   ========================================================= */
+
+function updateResources() {
+
+    document.getElementById(
+        "carp"
+    ).textContent =
+        Math.floor(
+            resources.carp
+        );
+
+    document.getElementById(
+        "beef"
+    ).textContent =
+        Math.floor(
+            resources.beef
+        );
+
+    document.getElementById(
+        "bread"
+    ).textContent =
+        Math.floor(
+            resources.bread
+        );
+
+    document.getElementById(
+        "carrots"
+    ).textContent =
+        Math.floor(
+            resources.carrots
+        );
+
+    document.getElementById(
+        "cabbages"
+    ).textContent =
+        Math.floor(
+            resources.cabbages
+        );
+
+}
+
+
+/* =========================================================
+   AUTUMN LEAVES
+   ========================================================= */
+
+function createLeaves() {
+
+    const container =
+        document.getElementById(
+            "leaves"
+        );
+
+
+    for (
+        let i = 0;
+        i < 80;
+        i++
+    ) {
+
+        const leaf =
+            document.createElement(
+                "div"
+            );
+
+        leaf.className =
+            "leaf";
+
+
+        leaf.style.left =
+            Math.random() * 100 + "%";
+
+
+        leaf.style.animationDuration =
+            (
+                4 +
+                Math.random() * 8
+            ) + "s";
+
+
+        leaf.style.animationDelay =
+            (
+                Math.random() * 8
+            ) + "s";
+
+
+        container.appendChild(
+            leaf
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   SNOW
+   ========================================================= */
+
+function createSnow() {
+
+    const container =
+        document.getElementById(
+            "snow"
+        );
+
+
+    for (
+        let i = 0;
+        i < 120;
+        i++
+    ) {
+
+        const snowflake =
+            document.createElement(
+                "div"
+            );
+
+        snowflake.className =
+            "snowflake";
+
+
+        const size =
+            2 +
+            Math.random() * 6;
+
+
+        snowflake.style.width =
+            size + "px";
+
+        snowflake.style.height =
+            size + "px";
+
+
+        snowflake.style.left =
+            Math.random() * 100 + "%";
+
+
+        snowflake.style.animationDuration =
+            (
+                4 +
+                Math.random() * 7
+            ) + "s";
+
+
+        snowflake.style.animationDelay =
+            (
+                Math.random() * 8
+            ) + "s";
+
+
+        container.appendChild(
+            snowflake
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   GAME CLOCK
+   ========================================================= */
+
+let lastTime =
+    performance.now();
+
+
+function gameLoop(currentTime) {
+
+    const delta =
+        (
+            currentTime -
+            lastTime
+        ) / 1000;
+
+
+    lastTime =
+        currentTime;
+
+
+    /*
+       Month progression is affected
+       by game speed.
+    */
+
+    const monthProgress =
+        (
+            delta *
+            gameSpeed
+        ) /
+        REAL_SECONDS_PER_MONTH;
+
+
+    window.monthProgress =
+        (
+            window.monthProgress ||
+            0
+        ) +
+        monthProgress;
+
+
+    if (
+        window.monthProgress >= 1
+    ) {
+
+        window.monthProgress -= 1;
+
+        nextMonth();
+
+    }
+
+
+    /*
+       Resource production also follows
+       the selected simulation speed.
+    */
+
+    let productionSteps =
+        delta *
+        gameSpeed;
+
+
+    if (
+        productionSteps > 0
+    ) {
+
+        for (
+            let i = 0;
+            i < Math.ceil(
+                productionSteps
+            );
+            i++
+        ) {
+
+            produceResources();
+
+        }
+
+    }
+
+
+    requestAnimationFrame(
+        gameLoop
+    );
+
+}
+
+
+/* =========================================================
+   START
+   ========================================================= */
+
+createLeaves();
+
+createSnow();
+
+updateSeason();
+
+updateResources();
+
+requestAnimationFrame(
+    gameLoop
+);
+
+</script>
+
+</body>
+
+</html>
+Season cycle
+MARCH      → Spring
+APRIL      → Spring
+MAY        → Spring
+
+JUNE       → Summer
+JULY       → Summer
+AUGUST     → Summer
+
+SEPTEMBER  → Autumn
+OCTOBER    → Autumn
+NOVEMBER   → Autumn
+
+DECEMBER   → Winter
+JANUARY    → Winter
+FEBRUARY   → Winter
+
+MARCH      → Spring again
