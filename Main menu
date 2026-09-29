@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Lords of Castles</title>
+
+<style>
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #080706;
+    font-family: "Arial Narrow", Arial, sans-serif;
+}
+
+
+/* =====================================================
+   MAIN MENU BACKGROUND
+===================================================== */
+
+.menu {
+    position: relative;
+
+    width: 100vw;
+    height: 100vh;
+
+    background-image:
+        linear-gradient(
+            90deg,
+            rgba(0,0,0,0.45),
+            rgba(0,0,0,0.08)
+        ),
+        url("wide_cinematic_video_game_main_menu_scene_dim_med.png");
+
+    background-size: cover;
+    background-position: center;
+
+    overflow: hidden;
+}
+
+
+/* =====================================================
+   DARK LEFT VIGNETTE
+===================================================== */
+
+.menu::before {
+
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+    top: 0;
+
+    width: 52%;
+    height: 100%;
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(0,0,0,0.82),
+            rgba(0,0,0,0.48),
+            transparent
+        );
+
+    pointer-events: none;
+}
+
+
+/* =====================================================
+   TITLE
+===================================================== */
+
+.title {
+
+    position: absolute;
+
+    left: 5.3%;
+    top: 20%;
+
+    width: 420px;
+
+    color: white;
+
+    font-weight: 900;
+
+    text-align: center;
+
+    text-transform: uppercase;
+
+    letter-spacing: 5px;
+
+    line-height: 0.88;
+
+    text-shadow:
+        0 3px 4px rgba(0,0,0,0.8),
+        0 8px 20px rgba(0,0,0,0.6);
+}
+
+
+.title .lords {
+
+    display: block;
+
+    font-size: clamp(45px, 5vw, 78px);
+
+}
+
+
+.title .of {
+
+    display: inline-block;
+
+    font-size: clamp(35px, 3.5vw, 55px);
+
+    margin: 5px 8px;
+
+}
+
+
+.title .castles {
+
+    display: block;
+
+    font-size: clamp(43px, 4.7vw, 72px);
+
+}
+
+
+/* =====================================================
+   DECORATIVE LINE
+===================================================== */
+
+.title-line {
+
+    position: absolute;
+
+    left: 5.7%;
+    top: 38%;
+
+    width: 410px;
+
+    height: 2px;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            #c4a46a,
+            transparent
+        );
+}
+
+
+.title-line::before,
+.title-line::after {
+
+    content: "◆";
+
+    position: absolute;
+
+    top: -9px;
+
+    color: #d2b37a;
+
+    font-size: 12px;
+}
+
+
+.title-line::before {
+    left: -2px;
+}
+
+
+.title-line::after {
+    right: -2px;
+}
+
+
+/* =====================================================
+   MENU
+===================================================== */
+
+.menu-buttons {
+
+    position: absolute;
+
+    left: 5.5%;
+    top: 43%;
+
+    width: 400px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    gap: 2px;
+}
+
+
+.menu-button {
+
+    position: relative;
+
+    width: 300px;
+
+    height: 55px;
+
+    background: transparent;
+
+    border: none;
+
+    color: #eeeeee;
+
+    font-size: 22px;
+
+    font-weight: 600;
+
+    letter-spacing: 1px;
+
+    text-transform: uppercase;
+
+    cursor: pointer;
+
+    transition:
+        color 0.15s,
+        transform 0.15s;
+}
+
+
+.menu-button::before {
+
+    content: "◆";
+
+    position: absolute;
+
+    left: -10px;
+
+    top: 50%;
+
+    transform:
+        translateY(-50%)
+        scale(0);
+
+    color: #d3b476;
+
+    transition: 0.15s;
+}
+
+
+.menu-button::after {
+
+    content: "";
+
+    position: absolute;
+
+    left: 50%;
+
+    bottom: 5px;
+
+    width: 0;
+
+    height: 1px;
+
+    background: #c5a56d;
+
+    transform: translateX(-50%);
+
+    transition: width 0.15s;
+}
+
+
+.menu-button:hover {
+
+    color: #e2c58d;
+
+    transform: translateX(5px);
+}
+
+
+.menu-button:hover::before {
+
+    transform:
+        translateY(-50%)
+        scale(1);
+}
+
+
+.menu-button:hover::after {
+
+    width: 220px;
+}
+
+
+/* =====================================================
+   BOTTOM VERSION
+===================================================== */
+
+.version {
+
+    position: absolute;
+
+    bottom: 15px;
+
+    left: 25px;
+
+    color: rgba(255,255,255,0.35);
+
+    font-size: 11px;
+
+    letter-spacing: 1px;
+}
+
+
+/* =====================================================
+   FADE
+===================================================== */
+
+.fade {
+
+    position: fixed;
+
+    inset: 0;
+
+    background: black;
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    transition: opacity 0.6s;
+
+    z-index: 100;
+}
+
+
+.fade.active {
+
+    opacity: 1;
+}
+
+
+/* =====================================================
+   POPUP
+===================================================== */
+
+.popup {
+
+    position: fixed;
+
+    left: 50%;
+    top: 50%;
+
+    transform:
+        translate(-50%, -50%)
+        scale(0.9);
+
+    width: 430px;
+
+    padding: 30px;
+
+    background:
+        linear-gradient(
+            #382b1e,
+            #17120d
+        );
+
+    border: 2px solid #a17c48;
+
+    box-shadow:
+        0 15px 60px rgba(0,0,0,0.8);
+
+    color: #e7d4ad;
+
+    text-align: center;
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    transition: 0.25s;
+
+    z-index: 200;
+}
+
+
+.popup.active {
+
+    opacity: 1;
+
+    pointer-events: auto;
+
+    transform:
+        translate(-50%, -50%)
+        scale(1);
+}
+
+
+.popup h2 {
+
+    margin-bottom: 15px;
+
+    letter-spacing: 3px;
+
+    text-transform: uppercase;
+}
+
+
+.popup p {
+
+    color: #c5b28e;
+
+    line-height: 1.6;
+
+    margin-bottom: 20px;
+}
+
+
+.popup button {
+
+    padding: 12px 35px;
+
+    background: #493624;
+
+    border: 1px solid #967347;
+
+    color: #e9d5ad;
+
+    cursor: pointer;
+
+    text-transform: uppercase;
+
+    letter-spacing: 2px;
+}
+
+
+.popup button:hover {
+
+    background: #684d2e;
+}
+
+</style>
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     MAIN MENU
+===================================================== -->
+
+<div class="menu">
+
+
+    <!-- TITLE -->
+
+    <div class="title">
+
+        <span class="lords">
+            Lords
+        </span>
+
+        <span class="of">
+            of
+        </span>
+
+        <span class="castles">
+            Castles
+        </span>
+
+    </div>
+
+
+    <div class="title-line"></div>
+
+
+    <!-- BUTTONS -->
+
+    <div class="menu-buttons">
+
+        <button
+            class="menu-button"
+            onclick="newGame()">
+
+            New Game
+
+        </button>
+
+
+        <button
+            class="menu-button"
+            onclick="loadGame()">
+
+            Load Game
+
+        </button>
+
+
+        <button
+            class="menu-button"
+            onclick="settings()">
+
+            Settings
+
+        </button>
+
+
+        <button
+            class="menu-button"
+            onclick="credits()">
+
+            Credits
+
+        </button>
+
+
+        <button
+            class="menu-button"
+            onclick="quitGame()">
+
+            Quit Game
+
+        </button>
+
+    </div>
+
+
+    <div class="version">
+        LORDS OF CASTLES — MEDIEVAL SETTLEMENT
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     FADE
+===================================================== -->
+
+<div
+    id="fade"
+    class="fade">
+</div>
+
+
+<!-- =====================================================
+     POPUP
+===================================================== -->
+
+<div
+    id="popup"
+    class="popup">
+
+    <h2 id="popupTitle">
+        Lords of Castles
+    </h2>
+
+    <p id="popupText">
+        Welcome to your medieval kingdom.
+    </p>
+
+    <button onclick="closePopup()">
+        Continue
+    </button>
+
+</div>
+
+
+<script>
+
+/* =====================================================
+   NEW GAME
+===================================================== */
+
+function newGame() {
+
+    transition();
+
+    setTimeout(() => {
+
+        document.getElementById("popupTitle")
+            .textContent = "New Game";
+
+        document.getElementById("popupText")
+            .textContent =
+            "Your journey begins. Build your settlement, gather resources, house your families and establish your medieval realm.";
+
+        document.getElementById("popup")
+            .classList.add("active");
+
+    }, 600);
+
+}
+
+
+/* =====================================================
+   LOAD GAME
+===================================================== */
+
+function loadGame() {
+
+    showPopup(
+        "Load Game",
+        "No saved settlements have been created yet."
+    );
+
+}
+
+
+/* =====================================================
+   SETTINGS
+===================================================== */
+
+function settings() {
+
+    showPopup(
+        "Settings",
+        "Graphics, audio, controls and gameplay settings will appear here."
+    );
+
+}
+
+
+/* =====================================================
+   CREDITS
+===================================================== */
+
+function credits() {
+
+    showPopup(
+        "Credits",
+        "Lords of Castles<br><br>Medieval Settlement Prototype"
+    );
+
+}
+
+
+/* =====================================================
+   QUIT
+===================================================== */
+
+function quitGame() {
+
+    showPopup(
+        "Quit Game",
+        "The game would now close."
+    );
+
+}
+
+
+/* =====================================================
+   POPUP
+===================================================== */
+
+function showPopup(title, text) {
+
+    document.getElementById("popupTitle")
+        .textContent = title;
+
+    document.getElementById("popupText")
+        .innerHTML = text;
+
+    document.getElementById("popup")
+        .classList.add("active");
+
+}
+
+
+function closePopup() {
+
+    document.getElementById("popup")
+        .classList.remove("active");
+
+}
+
+
+/* =====================================================
+   TRANSITION
+===================================================== */
+
+function transition() {
+
+    document.getElementById("fade")
+        .classList.add("active");
+
+}
+
+</script>
+
+</body>
+</html>
