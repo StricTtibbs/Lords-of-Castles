@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Medieval Building Menu</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        background: #17130f;
+        color: #e8d8b5;
+        font-family: Georgia, "Times New Roman", serif;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    /* Main Menu */
+    .building-menu {
+        position: absolute;
+        left: 50%;
+        bottom: 25px;
+        transform: translateX(-50%);
+        width: 850px;
+        background: linear-gradient(#2b241c, #17130f);
+        border: 3px solid #8d7046;
+        box-shadow:
+            0 0 0 2px #332719,
+            0 10px 35px rgba(0,0,0,0.75);
+        padding: 14px;
+    }
+
+    .menu-title {
+        text-align: center;
+        font-size: 25px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: #f0dfba;
+        border-bottom: 1px solid #735a37;
+        padding-bottom: 10px;
+        margin-bottom: 12px;
+    }
+
+    .categories {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+    }
+
+    .category {
+        height: 95px;
+        background: linear-gradient(#443629, #241d17);
+        border: 2px solid #725b3b;
+        color: #e6d1a6;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: 0.15s;
+        user-select: none;
+    }
+
+    .category:hover {
+        background: linear-gradient(#604a30, #33271d);
+        border-color: #c29b5c;
+        transform: translateY(-3px);
+    }
+
+    .category.active {
+        background: linear-gradient(#735a38, #3b2d1e);
+        border-color: #d5b16d;
+        box-shadow: inset 0 0 12px rgba(220,180,100,0.25);
+    }
+
+    .icon {
+        font-size: 32px;
+        margin-bottom: 7px;
+    }
+
+    .category-name {
+        font-size: 13px;
+        text-align: center;
+        text-transform: uppercase;
+    }
+
+    /* Building Options */
+    .options-panel {
+        position: absolute;
+        left: 50%;
+        bottom: 180px;
+        transform: translateX(-50%);
+        width: 850px;
+        min-height: 180px;
+        background: rgba(24,19,14,0.97);
+        border: 2px solid #80643d;
+        padding: 15px;
+        display: none;
+    }
+
+    .options-panel.show {
+        display: block;
+    }
+
+    .options-title {
+        font-size: 20px;
+        color: #e8cf9e;
+        margin-bottom: 12px;
+        border-bottom: 1px solid #60492d;
+        padding-bottom: 7px;
+    }
+
+    .building-options {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+    }
+
+    .building {
+        background: #30261c;
+        border: 1px solid #695238;
+        padding: 12px 5px;
+        text-align: center;
+        cursor: pointer;
+        transition: 0.15s;
+    }
+
+    .building:hover {
+        background: #493724;
+        border-color: #b18a51;
+    }
+
+    .building-icon {
+        font-size: 30px;
+        margin-bottom: 5px;
+    }
+
+    .building-name {
+        font-size: 12px;
+        color: #dec79c;
+    }
+
+    /* Medieval divider */
+    .ornament {
+        text-align: center;
+        color: #9c7948;
+        margin: 4px 0;
+        font-size: 13px;
+    }
+</style>
+</head>
+
+<body>
+
+<!-- BUILDING OPTIONS -->
+<div id="optionsPanel" class="options-panel">
+    <div id="optionsTitle" class="options-title">
+        Select a category
+    </div>
+
+    <div id="buildingOptions" class="building-options"></div>
+</div>
+
+
+<!-- MAIN BUILDING MENU -->
+<div class="building-menu">
+
+    <div class="menu-title">
+        ⚔ Medieval Building Menu ⚔
+    </div>
+
+    <div class="categories">
+
+        <!-- 1 -->
+        <div class="category" onclick="openCategory('industry', this)">
+            <div class="icon">⚒</div>
+            <div class="category-name">Industry</div>
+        </div>
+
+        <!-- 2 -->
+        <div class="category" onclick="openCategory('residential', this)">
+            <div class="icon">🏠</div>
+            <div class="category-name">Residential</div>
+        </div>
+
+        <!-- 3 -->
+        <div class="category" onclick="openCategory('customization', this)">
+            <div class="icon">🛠</div>
+            <div class="category-name">Customization</div>
+        </div>
+
+        <!-- 4 -->
+        <div class="category" onclick="openCategory('agriculture', this)">
+            <div class="icon">🌾</div>
+            <div class="category-name">Agriculture</div>
+        </div>
+
+        <!-- 5 -->
+        <div class="category" onclick="openCategory('castle', this)">
+            <div class="icon">🏰</div>
+            <div class="category-name">Castle</div>
+        </div>
+
+        <!-- 6 -->
+        <div class="category" onclick="openCategory('military', this)">
+            <div class="icon">⚔</div>
+            <div class="category-name">Military</div>
+        </div>
+
+        <!-- 7 -->
+        <div class="category" onclick="openCategory('infrastructure', this)">
+            <div class="icon">🛣</div>
+            <div class="category-name">Infrastructure</div>
+        </div>
+
+    </div>
+
+    <div class="ornament">
+        ◆ ───────────── ◆
+    </div>
+
+</div>
+
+
+<script>
+
+const categories = {
+
+    industry: {
+        name: "Industry",
+        buildings: [
+            ["⚒", "Blacksmith"],
+            ["🪵", "Sawmill"],
+            ["⛏", "Stonecutter"],
+            ["🔥", "Forge"],
+            ["🏭", "Workshop"]
+        ]
+    },
+
+    residential: {
+        name: "Residential",
+        buildings: [
+            ["🏠", "Peasant House"],
+            ["🏡", "Cottage"],
+            ["🏘", "Townhouse"],
+            ["🏰", "Manor House"],
+            ["🏛", "Noble Residence"]
+        ]
+    },
+
+    customization: {
+        name: "Customization",
+        buildings: [
+            ["🌳", "Trees"],
+            ["🌲", "Pine Trees"],
+            ["🪨", "Rocks"],
+            ["🌿", "Bushes"],
+            ["⛲", "Decoration"]
+        ]
+    },
+
+    agriculture: {
+        name: "Agriculture",
+        buildings: [
+            ["🌾", "Wheat Field"],
+            ["🥕", "Vegetable Field"],
+            ["🐄", "Cattle Farm"],
+            ["🐑", "Sheep Farm"],
+            ["🌻", "Herb Garden"]
+        ]
+    },
+
+    castle: {
+        name: "Castle & Settlement",
+        buildings: [
+            ["🏰", "Castle Keep"],
+            ["🧱", "Castle Wall"],
+            ["🚪", "Gatehouse"],
+            ["🗼", "Watchtower"],
+            ["🏘", "Settlement Centre"]
+        ]
+    },
+
+    military: {
+        name: "Military",
+        buildings: [
+            ["⚔", "Barracks"],
+            ["🏹", "Archery Range"],
+            ["🐎", "Stable"],
+            ["🛡", "Armoury"],
+            ["⚔", "Training Yard"]
+        ]
+    },
+
+    infrastructure: {
+        name: "Infrastructure",
+        buildings: [
+            ["🛣", "Road"],
+            ["🌉", "Bridge"],
+            ["🚰", "Well"],
+            ["📦", "Storage"],
+            ["🏪", "Market"]
+        ]
+    }
+
+};
+
+
+function openCategory(category, element) {
+
+    document.querySelectorAll(".category")
+        .forEach(button => button.classList.remove("active"));
+
+    element.classList.add("active");
+
+    const data = categories[category];
+
+    document.getElementById("optionsTitle").innerText =
+        data.name;
+
+    const container =
+        document.getElementById("buildingOptions");
+
+    container.innerHTML = "";
+
+    data.buildings.forEach(building => {
+
+        const div = document.createElement("div");
+
+        div.className = "building";
+
+        div.innerHTML = `
+            <div class="building-icon">${building[0]}</div>
+            <div class="building-name">${building[1]}</div>
+        `;
+
+        div.onclick = () => {
+            alert("Selected: " + building[1]);
+        };
+
+        container.appendChild(div);
+
+    });
+
+    document.getElementById("optionsPanel")
+        .classList.add("show");
+}
