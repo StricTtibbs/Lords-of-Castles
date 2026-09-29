@@ -1,0 +1,48 @@
+// FoodSystem.h
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "FoodSystem.generated.h"
+
+
+USTRUCT(BlueprintType)
+struct FFoodInventory
+{
+    GENERATED_BODY()
+
+    // =========================================
+    // STARTING FOOD
+    // =========================================
+
+    UPROPERTY(BlueprintReadWrite)
+    int32 Carp = 10;
+
+    UPROPERTY(BlueprintReadWrite)
+    int32 RoastBeef = 10;
+
+    UPROPERTY(BlueprintReadWrite)
+    int32 WhiteBreadLoaves = 10;
+
+    UPROPERTY(BlueprintReadWrite)
+    int32 Carrots = 10;
+
+    UPROPERTY(BlueprintReadWrite)
+    int32 Cabbages = 10;
+
+
+    // =========================================
+    // TOTAL FOOD
+    // =========================================
+
+    UFUNCTION(BlueprintPure)
+    int32 GetTotalFood() const
+    {
+        return
+            Carp +
+            RoastBeef +
+            WhiteBreadLoaves +
+            Carrots +
+            Cabbages;
+    }
+};
