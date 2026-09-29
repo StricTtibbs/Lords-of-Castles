@@ -1,0 +1,80 @@
+// VillageFoodComponent.h
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Components/ActorComponent.h"
+#include "FoodSystem.h"
+#include "VillageFoodComponent.generated.h"
+
+
+UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
+class MEDIEVALGAME_API UVillageFoodComponent
+    : public UActorComponent
+{
+    GENERATED_BODY()
+
+
+public:
+
+    UVillageFoodComponent();
+
+
+    // =========================================
+    // FOOD INVENTORY
+    // =========================================
+
+    UPROPERTY(
+        BlueprintReadWrite,
+        EditAnywhere
+    )
+    FFoodInventory Food;
+
+
+    // =========================================
+    // FOOD FUNCTIONS
+    // =========================================
+
+    UFUNCTION(BlueprintPure)
+    int32 GetTotalFood() const;
+
+
+    UFUNCTION(BlueprintCallable)
+    void AddCarp(int32 Amount);
+
+
+    UFUNCTION(BlueprintCallable)
+    void AddRoastBeef(int32 Amount);
+
+
+    UFUNCTION(BlueprintCallable)
+    void AddWhiteBread(int32 Amount);
+
+
+    UFUNCTION(BlueprintCallable)
+    void AddCarrots(int32 Amount);
+
+
+    UFUNCTION(BlueprintCallable)
+    void AddCabbages(int32 Amount);
+
+
+    UFUNCTION(BlueprintCallable)
+    bool ConsumeCarp(int32 Amount);
+
+
+    UFUNCTION(BlueprintCallable)
+    bool ConsumeRoastBeef(int32 Amount);
+
+
+    UFUNCTION(BlueprintCallable)
+    bool ConsumeWhiteBread(int32 Amount);
+
+
+    UFUNCTION(BlueprintCallable)
+    bool ConsumeCarrots(int32 Amount);
+
+
+    UFUNCTION(BlueprintCallable)
+    bool ConsumeCabbages(int32 Amount);
+};
