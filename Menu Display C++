@@ -1,0 +1,368 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Blueprint/UserWidget.h"
+#include "MedievalMainMenu.generated.h"
+
+class UButton;
+class UWidgetSwitcher;
+class UComboBoxString;
+
+UCLASS()
+class MEDIEVALGAME_API UMedievalMainMenu : public UUserWidget
+{
+    GENERATED_BODY()
+
+protected:
+
+    virtual void NativeConstruct() override;
+
+    // =========================================================
+    // MAIN MENU BUTTONS
+    // =========================================================
+
+    UPROPERTY(meta = (BindWidget))
+    UButton* ContinueButton;
+
+    UPROPERTY(meta = (BindWidget))
+    UButton* NewGameButton;
+
+    UPROPERTY(meta = (BindWidget))
+    UButton* LoadGameButton;
+
+    UPROPERTY(meta = (BindWidget))
+    UButton* OptionsButton;
+
+
+    // =========================================================
+    // OPTIONS
+    // =========================================================
+
+    UPROPERTY(meta = (BindWidgetOptional))
+    UButton* SaveOptionsButton;
+
+    UPROPERTY(meta = (BindWidgetOptional))
+    UButton* BackButton;
+
+
+    // =========================================================
+    // BUTTON FUNCTIONS
+    // =========================================================
+
+    UFUNCTION()
+    void ContinueGame();
+
+    UFUNCTION()
+    void StartNewGame();
+
+    UFUNCTION()
+    void LoadGame();
+
+    UFUNCTION()
+    void OpenOptions();
+
+    UFUNCTION()
+    void SaveOptions();
+
+    UFUNCTION()
+    void BackToMainMenu();
+
+
+    // =========================================================
+    // SCREEN MANAGEMENT
+    // =========================================================
+
+    UFUNCTION()
+    void OpenMapSelection();
+
+    UFUNCTION()
+    void OpenGameWorld();
+
+    void ShowMainMenu();
+
+    void ShowOptions();
+
+
+public:
+
+    UFUNCTION(BlueprintCallable)
+    void InitialiseMenu();
+};
+MedievalMainMenu.cpp
+#include "MedievalMainMenu.h"
+
+#include "Components/Button.h"
+#include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "GameFramework/PlayerController.h"
+#include "Engine/World.h"
+
+
+// =============================================================
+// CONSTRUCTOR / INITIALISATION
+// =============================================================
+
+void UMedievalMainMenu::NativeConstruct()
+{
+    Super::NativeConstruct();
+
+    InitialiseMenu();
+}
+
+
+// =============================================================
+// CONNECT BUTTONS
+// =============================================================
+
+void UMedievalMainMenu::InitialiseMenu()
+{
+    if (ContinueButton)
+    {
+        ContinueButton->OnClicked.AddDynamic(
+            this,
+            &UMedievalMainMenu::ContinueGame
+        );
+    }
+
+
+    if (NewGameButton)
+    {
+        NewGameButton->OnClicked.AddDynamic(
+            this,
+            &UMedievalMainMenu::StartNewGame
+        );
+    }
+
+
+    if (LoadGameButton)
+    {
+        LoadGameButton->OnClicked.AddDynamic(
+            this,
+            &UMedievalMainMenu::LoadGame
+        );
+    }
+
+
+    if (OptionsButton)
+    {
+        OptionsButton->OnClicked.AddDynamic(
+            this,
+            &UMedievalMainMenu::OpenOptions
+        );
+    }
+
+
+    if (SaveOptionsButton)
+    {
+        SaveOptionsButton->OnClicked.AddDynamic(
+            this,
+            &UMedievalMainMenu::SaveOptions
+        );
+    }
+
+
+    if (BackButton)
+    {
+        BackButton->OnClicked.AddDynamic(
+            this,
+            &UMedievalMainMenu::BackToMainMenu
+        );
+    }
+}
+
+
+// =============================================================
+// CONTINUE
+// =============================================================
+
+void UMedievalMainMenu::ContinueGame()
+{
+    UE_LOG(
+        LogTemp,
+        Log,
+        TEXT("CONTINUE GAME")
+    );
+
+    /*
+     * Later this can:
+     *
+     * 1. Find the most recent save.
+     * 2. Load the settlement.
+     * 3. Restore villagers.
+     * 4. Restore buildings.
+     * 5. Restore resources.
+     * 6. Restore season.
+     * 7. Restore game speed.
+     * 8. Restore AI kingdoms.
+     */
+
+    OpenGameWorld();
+}
+
+
+// =============================================================
+// NEW GAME
+// =============================================================
+
+void UMedievalMainMenu::StartNewGame()
+{
+    UE_LOG(
+        LogTemp,
+        Log,
+        TEXT("NEW GAME")
+    );
+
+    /*
+     * New Game does NOT immediately create
+     * the settlement.
+     *
+     * It first opens the map-selection screen.
+     */
+
+    OpenMapSelection();
+}
+
+
+// =============================================================
+// LOAD GAME
+// =============================================================
+
+void UMedievalMainMenu::LoadGame()
+{
+    UE_LOG(
+        LogTemp,
+        Log,
+        TEXT("LOAD GAME")
+    );
+
+    /*
+     * Your SaveGame system can eventually
+     * load the player's selected save slot.
+     */
+
+    OpenGameWorld();
+}
+
+
+// =============================================================
+// OPTIONS
+// =============================================================
+
+void UMedievalMainMenu::OpenOptions()
+{
+    UE_LOG(
+        LogTemp,
+        Log,
+        TEXT("OPTIONS")
+    );
+
+    ShowOptions();
+}
+
+
+// =============================================================
+// SAVE OPTIONS
+// =============================================================
+
+void UMedievalMainMenu::SaveOptions()
+{
+    UE_LOG(
+        LogTemp,
+        Log,
+        TEXT("OPTIONS SAVED")
+    );
+
+    /*
+     * Connect this to your graphics,
+     * audio, controls and gameplay settings.
+     */
+
+    ShowMainMenu();
+}
+
+
+// =============================================================
+// BACK
+// =============================================================
+
+void UMedievalMainMenu::BackToMainMenu()
+{
+    ShowMainMenu();
+}
+
+
+// =============================================================
+// MAP SELECTION
+// =============================================================
+
+void UMedievalMainMenu::OpenMapSelection()
+{
+    /*
+     * Change this to the exact level name
+     * of your map-selection level.
+     */
+
+    UGameplayStatics::OpenLevel(
+        this,
+        FName(TEXT("MapSelection"))
+    );
+}
+
+
+// =============================================================
+// GAME WORLD
+// =============================================================
+
+void UMedievalMainMenu::OpenGameWorld()
+{
+    /*
+     * This can later be replaced by your
+     * SaveGame / WorldManager system.
+     */
+
+    UGameplayStatics::OpenLevel(
+        this,
+        FName(TEXT("GameWorld"))
+    );
+}
+
+
+// =============================================================
+// MAIN MENU SCREEN
+// =============================================================
+
+void UMedievalMainMenu::ShowMainMenu()
+{
+    /*
+     * If using a WidgetSwitcher,
+     * switch back to the main-menu panel here.
+     *
+     * This function is intentionally separated
+     * so the menu can later be expanded.
+     */
+
+    UE_LOG(
+        LogTemp,
+        Log,
+        TEXT("Showing Main Menu")
+    );
+}
+
+
+// =============================================================
+// OPTIONS SCREEN
+// =============================================================
+
+void UMedievalMainMenu::ShowOptions()
+{
+    /*
+     * Connect this to your WidgetSwitcher
+     * or Options Widget.
+     */
+
+    UE_LOG(
+        LogTemp,
+        Log,
+        TEXT("Showing Options")
+    );
+}
