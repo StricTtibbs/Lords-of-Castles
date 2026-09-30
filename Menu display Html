@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Medieval Kingdoms</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+
+    font-family:
+        Georgia,
+        "Times New Roman",
+        serif;
+
+    background: #111;
+}
+
+
+/* =========================================================
+   MAIN MENU BACKGROUND
+   ========================================================= */
+
+.menu {
+    position: relative;
+
+    width: 100vw;
+    height: 100vh;
+
+    overflow: hidden;
+
+    background:
+        linear-gradient(
+            rgba(10, 12, 10, 0.35),
+            rgba(10, 12, 10, 0.72)
+        ),
+        linear-gradient(
+            to bottom,
+            #4b5960 0%,
+            #738078 40%,
+            #59654e 65%,
+            #20251c 100%
+        );
+}
+
+
+/* =========================================================
+   DISTANT MOUNTAINS
+   ========================================================= */
+
+.mountains {
+    position: absolute;
+
+    left: 0;
+    bottom: 25%;
+
+    width: 100%;
+    height: 45%;
+
+    opacity: 0.85;
+}
+
+.mountain {
+    position: absolute;
+
+    bottom: 0;
+
+    width: 0;
+    height: 0;
+
+    border-left: 180px solid transparent;
+    border-right: 180px solid transparent;
+    border-bottom: 330px solid #303936;
+}
+
+.mountain:nth-child(1) {
+    left: 2%;
+}
+
+.mountain:nth-child(2) {
+    left: 20%;
+
+    border-bottom-height: 390px;
+}
+
+.mountain:nth-child(3) {
+    left: 40%;
+
+    border-bottom: 280px solid #272e2c;
+}
+
+.mountain:nth-child(4) {
+    left: 62%;
+
+    border-bottom: 410px solid #303735;
+}
+
+.mountain:nth-child(5) {
+    left: 82%;
+
+    border-bottom: 300px solid #252b29;
+}
+
+
+/* =========================================================
+   CASTLE SILHOUETTE
+   ========================================================= */
+
+.castle {
+    position: absolute;
+
+    left: 50%;
+    bottom: 20%;
+
+    transform: translateX(-50%);
+
+    width: 620px;
+    height: 300px;
+
+    opacity: 0.95;
+}
+
+.castle-body {
+    position: absolute;
+
+    left: 120px;
+    bottom: 0;
+
+    width: 380px;
+    height: 220px;
+
+    background: #20221f;
+
+    border-top: 10px solid #383a35;
+}
+
+.tower {
+    position: absolute;
+
+    bottom: 0;
+
+    width: 110px;
+    height: 280px;
+
+    background: #1b1d1a;
+
+    border-top: 8px solid #393b36;
+}
+
+.tower.left {
+    left: 30px;
+}
+
+.tower.right {
+    right: 30px;
+}
+
+.tower.center {
+    left: 255px;
+    height: 310px;
+}
+
+.tower-roof {
+    position: absolute;
+
+    top: -65px;
+    left: -15px;
+
+    width: 0;
+    height: 0;
+
+    border-left: 70px solid transparent;
+    border-right: 70px solid transparent;
+    border-bottom: 70px solid #151613;
+}
+
+.window {
+    position: absolute;
+
+    width: 16px;
+    height: 40px;
+
+    background: #c69c52;
+
+    left: 47px;
+    top: 80px;
+
+    box-shadow:
+        0 0 15px rgba(230, 180, 80, 0.5);
+}
+
+.window.two {
+    top: 150px;
+}
+
+
+/* =========================================================
+   TITLE
+   ========================================================= */
+
+.title-area {
+    position: absolute;
+
+    top: 8%;
+
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    width: 100%;
+
+    text-align: center;
+}
+
+.title {
+    color: #e5cf9a;
+
+    font-size: clamp(
+        50px,
+        6vw,
+        105px
+    );
+
+    font-weight: bold;
+
+    letter-spacing: 8px;
+
+    text-shadow:
+        0 4px 5px #000,
+        0 0 25px rgba(0,0,0,0.8);
+}
+
+.subtitle {
+    margin-top: 8px;
+
+    color: #c7b98f;
+
+    font-size: clamp(
+        16px,
+        1.5vw,
+        28px
+    );
+
+    letter-spacing: 6px;
+
+    text-shadow:
+        0 3px 5px #000;
+}
+
+
+/* =========================================================
+   MENU
+   ========================================================= */
+
+.menu-buttons {
+    position: absolute;
+
+    left: 50%;
+
+    bottom: 7%;
+
+    transform: translateX(-50%);
+
+    width: 430px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 13px;
+}
+
+
+/* =========================================================
+   BUTTON
+   ========================================================= */
+
+.menu-button {
+    position: relative;
+
+    width: 100%;
+
+    height: 65px;
+
+    border: 2px solid #9b8250;
+
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(65, 51, 33, 0.96),
+            rgba(31, 27, 21, 0.98)
+        );
+
+    color: #ead9aa;
+
+    font-family:
+        Georgia,
+        "Times New Roman",
+        serif;
+
+    font-size: 25px;
+
+    letter-spacing: 2px;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.15s ease,
+        background 0.15s ease,
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.menu-button:hover {
+
+    transform:
+        scale(1.025);
+
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(105, 81, 47, 0.98),
+            rgba(51, 39, 25, 0.98)
+        );
+
+    border-color: #d6b76d;
+
+    box-shadow:
+        0 0 20px rgba(
+            214,
+            183,
+            109,
+            0.25
+        );
+}
+
+.menu-button:active {
+
+    transform:
+        scale(0.985);
+}
+
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.footer {
+
+    position: absolute;
+
+    bottom: 18px;
+
+    left: 25px;
+
+    color: rgba(
+        230,
+        220,
+        190,
+        0.55
+    );
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   OVERLAY WINDOWS
+   ========================================================= */
+
+.overlay {
+
+    position: fixed;
+
+    inset: 0;
+
+    display: none;
+
+    align-items: center;
+
+    justify-content: center;
+
+    background:
+        rgba(
+            0,
+            0,
+            0,
+            0.75
+        );
+
+    z-index: 100;
+}
+
+.panel {
+
+    width: min(
+        600px,
+        90vw
+    );
+
+    padding: 35px;
+
+    background:
+        linear-gradient(
+            #383126,
+            #1d1a16
+        );
+
+    border:
+        2px solid #aa8b52;
+
+    box-shadow:
+        0 15px 60px #000;
+
+    color: #e8d8ad;
+
+    text-align: center;
+}
+
+.panel h2 {
+
+    font-size: 38px;
+
+    margin-bottom: 25px;
+}
+
+.panel p {
+
+    color: #c8bea5;
+
+    line-height: 1.6;
+
+    margin-bottom: 25px;
+}
+
+.panel-button {
+
+    padding: 13px 35px;
+
+    border:
+        1px solid #aa8b52;
+
+    background: #33291d;
+
+    color: #e8d8ad;
+
+    cursor: pointer;
+
+    font-family: Georgia, serif;
+
+    font-size: 17px;
+}
+
+.panel-button:hover {
+
+    background: #59452b;
+}
+
+
+/* =========================================================
+   OPTIONS
+   ========================================================= */
+
+.option-row {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin: 18px 0;
+
+    padding: 12px;
+
+    background:
+        rgba(
+            0,
+            0,
+            0,
+            0.2
+        );
+}
+
+select {
+
+    padding: 8px 20px;
+
+    background: #211d18;
+
+    border: 1px solid #806b45;
+
+    color: #e8d8ad;
+
+}
+
+
+/* =========================================================
+   CONTINUE GAME
+   ========================================================= */
+
+.save-info {
+
+    margin: 20px 0;
+
+    padding: 20px;
+
+    border:
+        1px solid #665437;
+
+    background:
+        rgba(
+            0,
+            0,
+            0,
+            0.25
+        );
+
+    text-align: left;
+}
+
+.save-info strong {
+
+    color: #e3ca8c;
+}
+
+</style>
+</head>
+
+
+<body>
+
+<div class="menu">
+
+    <!-- =====================================================
+         BACKGROUND
+         ===================================================== -->
+
+    <div class="mountains">
+
+        <div class="mountain"></div>
+        <div class="mountain"></div>
+        <div class="mountain"></div>
+        <div class="mountain"></div>
+        <div class="mountain"></div>
+
+    </div>
+
+
+    <!-- =====================================================
+         CASTLE
+         ===================================================== -->
+
+    <div class="castle">
+
+        <div class="tower left">
+            <div class="tower-roof"></div>
+            <div class="window"></div>
+            <div class="window two"></div>
+        </div>
+
+        <div class="castle-body"></div>
+
+        <div class="tower center">
+            <div class="tower-roof"></div>
+            <div class="window"></div>
+            <div class="window two"></div>
+        </div>
+
+        <div class="tower right">
+            <div class="tower-roof"></div>
+            <div class="window"></div>
+            <div class="window two"></div>
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         TITLE
+         ===================================================== -->
+
+    <div class="title-area">
+
+        <div class="title">
+            KINGDOMS
+        </div>
+
+        <div class="subtitle">
+            MEDIEVAL AGE
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         FOUR MENU OPTIONS
+         ===================================================== -->
+
+    <div class="menu-buttons">
+
+        <button
+            class="menu-button"
+            id="continueButton"
+        >
+            CONTINUE
+        </button>
+
+        <button
+            class="menu-button"
+            id="newGameButton"
+        >
+            NEW GAME
+        </button>
+
+        <button
+            class="menu-button"
+            id="loadGameButton"
+        >
+            LOAD GAME
+        </button>
+
+        <button
+            class="menu-button"
+            id="optionsButton"
+        >
+            OPTIONS
+        </button>
+
+    </div>
+
+
+    <div class="footer">
+        Medieval Strategy Prototype
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     CONTINUE WINDOW
+     ========================================================= -->
+
+<div
+    class="overlay"
+    id="continueOverlay"
+>
+
+    <div class="panel">
+
+        <h2>
+            Continue
+        </h2>
+
+        <div class="save-info">
+
+            <strong>
+                Last Kingdom
+            </strong>
+
+            <br><br>
+
+            Settlement:
+            Your Kingdom
+
+            <br>
+
+            Population:
+            5 families
+
+            <br>
+
+            Season:
+            Spring
+
+            <br>
+
+            Last played:
+            Current Save
+
+        </div>
+
+        <button
+            class="panel-button"
+            onclick="continueGame()"
+        >
+            CONTINUE
+        </button>
+
+        <br><br>
+
+        <button
+            class="panel-button"
+            onclick="closePanels()"
+        >
+            BACK
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     NEW GAME WINDOW
+     ========================================================= -->
+
+<div
+    class="overlay"
+    id="newGameOverlay"
+>
+
+    <div class="panel">
+
+        <h2>
+            New Game
+        </h2>
+
+        <p>
+            Begin a new medieval kingdom.
+            Your settlement will begin with five families
+            and the starting resources configured for your game.
+        </p>
+
+        <button
+            class="panel-button"
+            onclick="startNewGame()"
+        >
+            START NEW GAME
+        </button>
+
+        <br><br>
+
+        <button
+            class="panel-button"
+            onclick="closePanels()"
+        >
+            BACK
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     LOAD GAME WINDOW
+     ========================================================= -->
+
+<div
+    class="overlay"
+    id="loadGameOverlay"
+>
+
+    <div class="panel">
+
+        <h2>
+            Load Game
+        </h2>
+
+        <div class="save-info">
+
+            <strong>
+                Save Slot 1
+            </strong>
+
+            <br><br>
+
+            Kingdom Save
+
+            <br>
+
+            Spring — Year 1
+
+            <br>
+
+            5 Families
+
+        </div>
+
+        <button
+            class="panel-button"
+            onclick="loadGame()"
+        >
+            LOAD
+        </button>
+
+        <br><br>
+
+        <button
+            class="panel-button"
+            onclick="closePanels()"
+        >
+            BACK
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     OPTIONS WINDOW
+     ========================================================= -->
+
+<div
+    class="overlay"
+    id="optionsOverlay"
+>
+
+    <div class="panel">
+
+        <h2>
+            Options
+        </h2>
+
+        <div class="option-row">
+
+            <span>
+                Graphics
+            </span>
+
+            <select id="graphics">
+
+                <option>
+                    Low
+                </option>
+
+                <option>
+                    Medium
+                </option>
+
+                <option selected>
+                    High
+                </option>
+
+                <option>
+                    Ultra
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div class="option-row">
+
+            <span>
+                Game Speed
+            </span>
+
+            <select id="gameSpeed">
+
+                <option>
+                    1x
+                </option>
+
+                <option>
+                    2x
+                </option>
+
+                <option>
+                    5x
+                </option>
+
+                <option>
+                    10x
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div class="option-row">
+
+            <span>
+                Fullscreen
+            </span>
+
+            <select id="fullscreen">
+
+                <option>
+                    Off
+                </option>
+
+                <option>
+                    On
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <button
+            class="panel-button"
+            onclick="saveOptions()"
+        >
+            SAVE OPTIONS
+        </button>
+
+        <br><br>
+
+        <button
+            class="panel-button"
+            onclick="closePanels()"
+        >
+            BACK
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* ============================================================
+   GET PANELS
+   ============================================================ */
+
+const continueOverlay =
+    document.getElementById(
+        "continueOverlay"
+    );
+
+const newGameOverlay =
+    document.getElementById(
+        "newGameOverlay"
+    );
+
+const loadGameOverlay =
+    document.getElementById(
+        "loadGameOverlay"
+    );
+
+const optionsOverlay =
+    document.getElementById(
+        "optionsOverlay"
+    );
+
+
+/* ============================================================
+   OPEN PANELS
+   ============================================================ */
+
+document
+    .getElementById("continueButton")
+    .addEventListener(
+        "click",
+        function()
+        {
+            closePanels();
+
+            continueOverlay.style.display =
+                "flex";
+        }
+    );
+
+
+document
+    .getElementById("newGameButton")
+    .addEventListener(
+        "click",
+        function()
+        {
+            closePanels();
+
+            newGameOverlay.style.display =
+                "flex";
+        }
+    );
+
+
+document
+    .getElementById("loadGameButton")
+    .addEventListener(
+        "click",
+        function()
+        {
+            closePanels();
+
+            loadGameOverlay.style.display =
+                "flex";
+        }
+    );
+
+
+document
+    .getElementById("optionsButton")
+    .addEventListener(
+        "click",
+        function()
+        {
+            closePanels();
+
+            optionsOverlay.style.display =
+                "flex";
+        }
+    );
+
+
+/* ============================================================
+   CLOSE
+   ============================================================ */
+
+function closePanels()
+{
+    continueOverlay.style.display =
+        "none";
+
+    newGameOverlay.style.display =
+        "none";
+
+    loadGameOverlay.style.display =
+        "none";
+
+    optionsOverlay.style.display =
+        "none";
+}
+
+
+/* ============================================================
+   CONTINUE
+   ============================================================ */
+
+function continueGame()
+{
+    /*
+        This is where your actual game world
+        will be loaded.
+
+        For now it stores the action so the
+        button is functional.
+    */
+
+    localStorage.setItem(
+        "gameAction",
+        "continue"
+    );
+
+    window.location.href =
+        "game.html";
+}
+
+
+/* ============================================================
+   NEW GAME
+   ============================================================ */
+
+function startNewGame()
+{
+    /*
+        New Game sends the player to
+        the map-selection stage.
+    */
+
+    localStorage.setItem(
+        "gameAction",
+        "newGame"
+    );
+
+    window.location.href =
+        "maps.html";
+}
+
+
+/* ============================================================
+   LOAD GAME
+   ============================================================ */
+
+function loadGame()
+{
+    localStorage.setItem(
+        "gameAction",
+        "loadGame"
+    );
+
+    window.location.href =
+        "game.html";
+}
+
+
+/* ============================================================
+   OPTIONS
+   ============================================================ */
+
+function saveOptions()
+{
+    const graphics =
+        document.getElementById(
+            "graphics"
+        ).value;
+
+    const speed =
+        document.getElementById(
+            "gameSpeed"
+        ).value;
+
+    const fullscreen =
+        document.getElementById(
+            "fullscreen"
+        ).value;
+
+
+    localStorage.setItem(
+        "graphics",
+        graphics
+    );
+
+    localStorage.setItem(
+        "gameSpeed",
+        speed
+    );
+
+    localStorage.setItem(
+        "fullscreen",
+        fullscreen
+    );
+
+
+    alert(
+        "Options saved."
+    );
+}
+
+
+/* ============================================================
+   ESCAPE KEY
+   ============================================================ */
+
+document.addEventListener(
+    "keydown",
+    function(event)
+    {
+        if (
+            event.key === "Escape"
+        )
+        {
+            closePanels();
+        }
+    }
+);
+
+
+/* ============================================================
+   LOAD SAVED OPTIONS
+   ============================================================ */
+
+window.addEventListener(
+    "load",
+    function()
+    {
+        const savedGraphics =
+            localStorage.getItem(
+                "graphics"
+            );
+
+        const savedSpeed =
+            localStorage.getItem(
+                "gameSpeed"
+            );
+
+        const savedFullscreen =
+            localStorage.getItem(
+                "fullscreen"
+            );
+
+
+        if (savedGraphics)
+        {
+            document.getElementById(
+                "graphics"
+            ).value =
+                savedGraphics;
+        }
+
+
+        if (savedSpeed)
+        {
+            document.getElementById(
+                "gameSpeed"
+            ).value =
+                savedSpeed;
+        }
+
+
+        if (savedFullscreen)
+        {
+            document.getElementById(
+                "fullscreen"
+            ).value =
+                savedFullscreen;
+        }
+    }
+);
+
+</script>
+
+</body>
+</html>
