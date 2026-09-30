@@ -1,0 +1,1289 @@
+// ============================================================
+// MedievalBushSystem.h
+// HIGH-DETAIL 3D BUSH & SHRUB SYSTEM
+// ============================================================
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "Components/HierarchicalInstancedStaticMeshComponent.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "MedievalBushSystem.generated.h"
+
+
+// ============================================================
+// BUSH SPECIES
+// ============================================================
+
+UENUM(BlueprintType)
+enum class EMedievalBushSpecies : uint8
+{
+    Blackberry,
+    Raspberry,
+    Blueberry,
+    Gooseberry,
+    Elderberry,
+    Hawthorn,
+    Blackthorn,
+    Hazel,
+    Rose,
+    WildRose,
+    Juniper,
+    Heather,
+    Bramble,
+    Fern,
+    Lavender,
+    Thyme,
+    Sage,
+    Mint,
+    Currant,
+    GooseberryBush,
+    WildGrape,
+    Holly
+};
+
+
+// ============================================================
+// GROWTH
+// ============================================================
+
+UENUM(BlueprintType)
+enum class EBushGrowthStage : uint8
+{
+    Seedling,
+    Young,
+    Mature,
+    Large,
+    Old
+};
+
+
+// ============================================================
+// HEALTH
+// ============================================================
+
+UENUM(BlueprintType)
+enum class EBushHealth : uint8
+{
+    Healthy,
+    Dry,
+    Damaged,
+    Diseased,
+    Dying,
+    Dead
+};
+
+
+// ============================================================
+// SEASON
+// ============================================================
+
+UENUM(BlueprintType)
+enum class EBushSeason : uint8
+{
+    Spring,
+    Summer,
+    Autumn,
+    Winter
+};
+
+
+// ============================================================
+// BERRY DATA
+// ============================================================
+
+USTRUCT(BlueprintType)
+struct FBushBerryData
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    bool bProducesFruit = false;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 MaximumFruit = 20;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 CurrentFruit = 0;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float FruitGrowthRate = 1.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FLinearColor FruitColour =
+        FLinearColor(0.4f, 0.05f, 0.05f);
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    bool bCanBeHarvested = true;
+};
+
+
+// ============================================================
+// FLOWER DATA
+// ============================================================
+
+USTRUCT(BlueprintType)
+struct FBushFlowerData
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    bool bProducesFlowers = false;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FLinearColor FlowerColour =
+        FLinearColor::White;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float FlowerDensity = 0.5f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 MaximumFlowers = 30;
+};
+
+
+// ============================================================
+// BUSH SIZE
+// ============================================================
+
+USTRUCT(BlueprintType)
+struct FBushDimensions
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float MinimumHeight = 0.3f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float MaximumHeight = 2.5f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float MinimumWidth = 0.5f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float MaximumWidth = 4.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 MinimumBranches = 4;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 MaximumBranches = 30;
+};
+
+
+// ============================================================
+// LEAF DATA
+// ============================================================
+
+USTRUCT(BlueprintType)
+struct FBushLeafData
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FLinearColor SpringColour =
+        FLinearColor(0.35f, 0.75f, 0.20f);
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FLinearColor SummerColour =
+        FLinearColor(0.20f, 0.55f, 0.12f);
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FLinearColor AutumnColour =
+        FLinearColor(0.75f, 0.30f, 0.05f);
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FLinearColor WinterColour =
+        FLinearColor(0.20f, 0.25f, 0.15f);
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float LeafDensity = 1.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float LeafSize = 1.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    bool bDropsLeaves = true;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    bool bEvergreen = false;
+};
+
+
+// ============================================================
+// BRANCH DATA
+// ============================================================
+
+USTRUCT(BlueprintType)
+struct FBushBranchData
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 PrimaryBranches = 6;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 SecondaryBranches = 20;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 FineBranches = 50;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float BranchCurvature = 0.4f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float BranchVariation = 0.3f;
+};
+
+
+// ============================================================
+// WIND DATA
+// ============================================================
+
+USTRUCT(BlueprintType)
+struct FBushWindData
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float WindSensitivity = 1.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float LeafMovement = 1.5f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float BranchMovement = 0.8f;
+};
+
+
+// ============================================================
+// BUSH SPECIES DATA
+// ============================================================
+
+USTRUCT(BlueprintType)
+struct FMedievalBushData
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    EMedievalBushSpecies Species =
+        EMedievalBushSpecies::Blackberry;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FName DisplayName =
+        TEXT("Blackberry Bush");
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FBushDimensions Dimensions;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FBushLeafData Leaves;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FBushBranchData Branches;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FBushBerryData Berries;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FBushFlowerData Flowers;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FBushWindData Wind;
+};
+
+
+// ============================================================
+// MAIN BUSH ACTOR
+// ============================================================
+
+UCLASS()
+class MEDIEVALGAME_API AMedievalBush
+    : public AActor
+{
+    GENERATED_BODY()
+
+public:
+
+    AMedievalBush();
+
+protected:
+
+    virtual void BeginPlay() override;
+
+public:
+
+    virtual void Tick(
+        float DeltaSeconds
+    ) override;
+
+
+    // ========================================================
+    // COMPONENTS
+    // ========================================================
+
+    UPROPERTY(VisibleAnywhere)
+    USceneComponent* Root;
+
+    UPROPERTY(VisibleAnywhere)
+    UHierarchicalInstancedStaticMeshComponent*
+        Stems;
+
+    UPROPERTY(VisibleAnywhere)
+    UHierarchicalInstancedStaticMeshComponent*
+        Branches;
+
+    UPROPERTY(VisibleAnywhere)
+    UHierarchicalInstancedStaticMeshComponent*
+        Leaves;
+
+    UPROPERTY(VisibleAnywhere)
+    UHierarchicalInstancedStaticMeshComponent*
+        Flowers;
+
+    UPROPERTY(VisibleAnywhere)
+    UHierarchicalInstancedStaticMeshComponent*
+        Fruit;
+
+
+    // ========================================================
+    // DATA
+    // ========================================================
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FMedievalBushData BushData;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    EBushGrowthStage GrowthStage =
+        EBushGrowthStage::Mature;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    EBushHealth Health =
+        EBushHealth::Healthy;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float AgeYears = 3.0f;
+
+
+    // ========================================================
+    // GENERATION
+    // ========================================================
+
+    UFUNCTION(BlueprintCallable)
+    void GenerateBush();
+
+    UFUNCTION(BlueprintCallable)
+    void GenerateStems();
+
+    UFUNCTION(BlueprintCallable)
+    void GenerateBranches();
+
+    UFUNCTION(BlueprintCallable)
+    void GenerateLeaves();
+
+    UFUNCTION(BlueprintCallable)
+    void GenerateFlowers();
+
+    UFUNCTION(BlueprintCallable)
+    void GenerateFruit();
+
+
+    // ========================================================
+    // SEASONS
+    // ========================================================
+
+    UFUNCTION(BlueprintCallable)
+    void ApplySeason(
+        EBushSeason Season
+    );
+
+
+    // ========================================================
+    // GROWTH
+    // ========================================================
+
+    UFUNCTION(BlueprintCallable)
+    void Grow(
+        float Years
+    );
+
+
+    // ========================================================
+    // FRUIT
+    // ========================================================
+
+    UFUNCTION(BlueprintCallable)
+    int32 HarvestFruit(
+        int32 Amount
+    );
+
+
+    UFUNCTION(BlueprintCallable)
+    void RegrowFruit(
+        float DeltaTime
+    );
+
+
+    // ========================================================
+    // WIND
+    // ========================================================
+
+    UFUNCTION(BlueprintCallable)
+    void ApplyWind(
+        FVector Direction,
+        float Strength
+    );
+};
+// ============================================================
+// MedievalBushSystem.cpp
+// ============================================================
+
+#include "MedievalBushSystem.h"
+
+#include "Engine/World.h"
+
+
+AMedievalBush::AMedievalBush()
+{
+    PrimaryActorTick.bCanEverTick = true;
+
+
+    // ========================================================
+    // ROOT
+    // ========================================================
+
+    Root =
+        CreateDefaultSubobject<USceneComponent>(
+            TEXT("BushRoot")
+        );
+
+    SetRootComponent(Root);
+
+
+    // ========================================================
+    // STEMS
+    // ========================================================
+
+    Stems =
+        CreateDefaultSubobject<
+            UHierarchicalInstancedStaticMeshComponent
+        >(
+            TEXT("Stems")
+        );
+
+    Stems->SetupAttachment(Root);
+
+
+    // ========================================================
+    // BRANCHES
+    // ========================================================
+
+    Branches =
+        CreateDefaultSubobject<
+            UHierarchicalInstancedStaticMeshComponent
+        >(
+            TEXT("Branches")
+        );
+
+    Branches->SetupAttachment(Root);
+
+
+    // ========================================================
+    // LEAVES
+    // ========================================================
+
+    Leaves =
+        CreateDefaultSubobject<
+            UHierarchicalInstancedStaticMeshComponent
+        >(
+            TEXT("Leaves")
+        );
+
+    Leaves->SetupAttachment(Root);
+
+
+    // ========================================================
+    // FLOWERS
+    // ========================================================
+
+    Flowers =
+        CreateDefaultSubobject<
+            UHierarchicalInstancedStaticMeshComponent
+        >(
+            TEXT("Flowers")
+        );
+
+    Flowers->SetupAttachment(Root);
+
+
+    // ========================================================
+    // FRUIT
+    // ========================================================
+
+    Fruit =
+        CreateDefaultSubobject<
+            UHierarchicalInstancedStaticMeshComponent
+        >(
+            TEXT("Fruit")
+        );
+
+    Fruit->SetupAttachment(Root);
+}
+
+
+// ============================================================
+// BEGIN PLAY
+// ============================================================
+
+void AMedievalBush::BeginPlay()
+{
+    Super::BeginPlay();
+
+    GenerateBush();
+}
+
+
+// ============================================================
+// TICK
+// ============================================================
+
+void AMedievalBush::Tick(
+    float DeltaSeconds
+)
+{
+    Super::Tick(
+        DeltaSeconds
+    );
+
+
+    const float Time =
+        GetWorld()->GetTimeSeconds();
+
+
+    const float Wind =
+        FMath::Sin(
+            Time * 0.9f
+        )
+        *
+        BushData.Wind.WindSensitivity;
+
+
+    ApplyWind(
+        FVector(
+            Wind,
+            0.0f,
+            0.0f
+        ),
+        1.0f
+    );
+
+
+    RegrowFruit(
+        DeltaSeconds
+    );
+}
+
+
+// ============================================================
+// COMPLETE GENERATION
+// ============================================================
+
+void AMedievalBush::GenerateBush()
+{
+    GenerateStems();
+
+    GenerateBranches();
+
+    GenerateLeaves();
+
+    GenerateFlowers();
+
+    GenerateFruit();
+}
+
+
+// ============================================================
+// STEMS
+// ============================================================
+
+void AMedievalBush::GenerateStems()
+{
+    if (!Stems)
+        return;
+
+
+    Stems->ClearInstances();
+
+
+    const int32 Count =
+        FMath::RandRange(
+            BushData.Dimensions.MinimumBranches,
+            BushData.Dimensions.MaximumBranches
+        );
+
+
+    for (
+        int32 i = 0;
+        i < Count;
+        ++i
+    )
+    {
+        const float Angle =
+            FMath::FRandRange(
+                0.0f,
+                360.0f
+            );
+
+
+        const float Radius =
+            FMath::FRandRange(
+                0.0f,
+                BushData.Dimensions.MaximumWidth
+                * 0.35f
+            );
+
+
+        const float Radians =
+            FMath::DegreesToRadians(
+                Angle
+            );
+
+
+        FVector Position;
+
+        Position.X =
+            FMath::Cos(Radians)
+            * Radius;
+
+        Position.Y =
+            FMath::Sin(Radians)
+            * Radius;
+
+        Position.Z = 0.0f;
+
+
+        FTransform Transform;
+
+        Transform.SetLocation(
+            Position
+        );
+
+
+        Transform.SetRotation(
+            FRotator(
+                FMath::FRandRange(
+                    -8.0f,
+                    8.0f
+                ),
+                Angle,
+                FMath::FRandRange(
+                    -8.0f,
+                    8.0f
+                )
+            ).Quaternion()
+        );
+
+
+        Transform.SetScale3D(
+            FVector(
+                0.15f,
+                0.15f,
+                FMath::FRandRange(
+                    0.7f,
+                    1.4f
+                )
+            )
+        );
+
+
+        Stems->AddInstance(
+            Transform
+        );
+    }
+}
+
+
+// ============================================================
+// BRANCHES
+// ============================================================
+
+void AMedievalBush::GenerateBranches()
+{
+    if (!Branches)
+        return;
+
+
+    Branches->ClearInstances();
+
+
+    const int32 Count =
+        BushData.Branches.PrimaryBranches +
+        BushData.Branches.SecondaryBranches +
+        BushData.Branches.FineBranches;
+
+
+    for (
+        int32 i = 0;
+        i < Count;
+        ++i
+    )
+    {
+        const float Angle =
+            FMath::FRandRange(
+                0.0f,
+                360.0f
+            );
+
+
+        const float Radius =
+            FMath::FRandRange(
+                0.1f,
+                BushData.Dimensions.MaximumWidth
+            );
+
+
+        const float Radians =
+            FMath::DegreesToRadians(
+                Angle
+            );
+
+
+        FVector Position;
+
+        Position.X =
+            FMath::Cos(Radians)
+            * Radius;
+
+        Position.Y =
+            FMath::Sin(Radians)
+            * Radius;
+
+        Position.Z =
+            FMath::FRandRange(
+                0.2f,
+                BushData.Dimensions.MaximumHeight
+            );
+
+
+        FRotator Rotation;
+
+        Rotation.Yaw =
+            Angle;
+
+        Rotation.Pitch =
+            FMath::FRandRange(
+                -40.0f,
+                40.0f
+            );
+
+        Rotation.Roll =
+            FMath::FRandRange(
+                -20.0f,
+                20.0f
+            );
+
+
+        FTransform Transform;
+
+        Transform.SetLocation(
+            Position
+        );
+
+        Transform.SetRotation(
+            Rotation.Quaternion()
+        );
+
+
+        const float Scale =
+            FMath::FRandRange(
+                0.5f,
+                1.5f
+            );
+
+
+        Transform.SetScale3D(
+            FVector(
+                Scale,
+                0.08f,
+                0.08f
+            )
+        );
+
+
+        Branches->AddInstance(
+            Transform
+        );
+    }
+}
+
+
+// ============================================================
+// LEAVES
+// ============================================================
+
+void AMedievalBush::GenerateLeaves()
+{
+    if (!Leaves)
+        return;
+
+
+    Leaves->ClearInstances();
+
+
+    const int32 Count =
+        FMath::RoundToInt(
+            150.0f *
+            BushData.Leaves.LeafDensity
+        );
+
+
+    for (
+        int32 i = 0;
+        i < Count;
+        ++i
+    )
+    {
+        const float Angle =
+            FMath::FRandRange(
+                0.0f,
+                360.0f
+            );
+
+
+        const float Radius =
+            FMath::FRandRange(
+                0.0f,
+                BushData.Dimensions.MaximumWidth
+            );
+
+
+        const float Radians =
+            FMath::DegreesToRadians(
+                Angle
+            );
+
+
+        FVector Position;
+
+        Position.X =
+            FMath::Cos(Radians)
+            * Radius;
+
+        Position.Y =
+            FMath::Sin(Radians)
+            * Radius;
+
+        Position.Z =
+            FMath::FRandRange(
+                0.2f,
+                BushData.Dimensions.MaximumHeight
+            );
+
+
+        FTransform Transform;
+
+        Transform.SetLocation(
+            Position
+        );
+
+
+        const float Scale =
+            FMath::FRandRange(
+                0.6f,
+                1.4f
+            )
+            *
+            BushData.Leaves.LeafSize;
+
+
+        Transform.SetScale3D(
+            FVector(
+                Scale,
+                Scale,
+                Scale
+            )
+        );
+
+
+        Leaves->AddInstance(
+            Transform
+        );
+    }
+}
+
+
+// ============================================================
+// FLOWERS
+// ============================================================
+
+void AMedievalBush::GenerateFlowers()
+{
+    if (!Flowers)
+        return;
+
+
+    Flowers->ClearInstances();
+
+
+    if (
+        !BushData.Flowers.bProducesFlowers
+    )
+    {
+        return;
+    }
+
+
+    const int32 Count =
+        FMath::RandRange(
+            5,
+            BushData.Flowers.MaximumFlowers
+        );
+
+
+    for (
+        int32 i = 0;
+        i < Count;
+        ++i
+    )
+    {
+        FVector Position;
+
+        Position.X =
+            FMath::FRandRange(
+                -BushData.Dimensions.MaximumWidth,
+                BushData.Dimensions.MaximumWidth
+            );
+
+        Position.Y =
+            FMath::FRandRange(
+                -BushData.Dimensions.MaximumWidth,
+                BushData.Dimensions.MaximumWidth
+            );
+
+        Position.Z =
+            FMath::FRandRange(
+                0.2f,
+                BushData.Dimensions.MaximumHeight
+            );
+
+
+        FTransform Transform;
+
+        Transform.SetLocation(
+            Position
+        );
+
+
+        Transform.SetScale3D(
+            FVector(
+                0.12f,
+                0.12f,
+                0.12f
+            )
+        );
+
+
+        Flowers->AddInstance(
+            Transform
+        );
+    }
+}
+
+
+// ============================================================
+// FRUIT
+// ============================================================
+
+void AMedievalBush::GenerateFruit()
+{
+    if (!Fruit)
+        return;
+
+
+    Fruit->ClearInstances();
+
+
+    if (
+        !BushData.Berries.bProducesFruit
+    )
+    {
+        return;
+    }
+
+
+    BushData.Berries.CurrentFruit =
+        FMath::RandRange(
+            0,
+            BushData.Berries.MaximumFruit
+        );
+
+
+    for (
+        int32 i = 0;
+        i < BushData.Berries.CurrentFruit;
+        ++i
+    )
+    {
+        FVector Position;
+
+        Position.X =
+            FMath::FRandRange(
+                -BushData.Dimensions.MaximumWidth,
+                BushData.Dimensions.MaximumWidth
+            );
+
+        Position.Y =
+            FMath::FRandRange(
+                -BushData.Dimensions.MaximumWidth,
+                BushData.Dimensions.MaximumWidth
+            );
+
+        Position.Z =
+            FMath::FRandRange(
+                0.5f,
+                BushData.Dimensions.MaximumHeight
+            );
+
+
+        FTransform Transform;
+
+        Transform.SetLocation(
+            Position
+        );
+
+
+        Transform.SetScale3D(
+            FVector(
+                0.10f,
+                0.10f,
+                0.10f
+            )
+        );
+
+
+        Fruit->AddInstance(
+            Transform
+        );
+    }
+}
+
+
+// ============================================================
+// SEASONS
+// ============================================================
+
+void AMedievalBush::ApplySeason(
+    EBushSeason Season
+)
+{
+    switch (Season)
+    {
+        case EBushSeason::Spring:
+
+            Leaves->SetVisibility(
+                true
+            );
+
+            GenerateFlowers();
+
+            break;
+
+
+        case EBushSeason::Summer:
+
+            Leaves->SetVisibility(
+                true
+            );
+
+            GenerateFruit();
+
+            break;
+
+
+        case EBushSeason::Autumn:
+
+            Leaves->SetVisibility(
+                true
+            );
+
+            break;
+
+
+        case EBushSeason::Winter:
+
+            if (
+                BushData.Leaves.bDropsLeaves
+                &&
+                !BushData.Leaves.bEvergreen
+            )
+            {
+                Leaves->SetVisibility(
+                    false
+                );
+            }
+
+            Fruit->ClearInstances();
+
+            break;
+    }
+}
+
+
+// ============================================================
+// GROWTH
+// ============================================================
+
+void AMedievalBush::Grow(
+    float Years
+)
+{
+    if (
+        Health ==
+        EBushHealth::Dead
+    )
+    {
+        return;
+    }
+
+
+    AgeYears += Years;
+
+
+    if (AgeYears < 0.5f)
+    {
+        GrowthStage =
+            EBushGrowthStage::Seedling;
+    }
+
+    else if (AgeYears < 2.0f)
+    {
+        GrowthStage =
+            EBushGrowthStage::Young;
+    }
+
+    else if (AgeYears < 6.0f)
+    {
+        GrowthStage =
+            EBushGrowthStage::Mature;
+    }
+
+    else if (AgeYears < 12.0f)
+    {
+        GrowthStage =
+            EBushGrowthStage::Large;
+    }
+
+    else
+    {
+        GrowthStage =
+            EBushGrowthStage::Old;
+    }
+
+
+    GenerateBush();
+}
+
+
+// ============================================================
+// FRUIT HARVEST
+// ============================================================
+
+int32 AMedievalBush::HarvestFruit(
+    int32 Amount
+)
+{
+    if (
+        !BushData.Berries.bProducesFruit
+    )
+    {
+        return 0;
+    }
+
+
+    const int32 Harvested =
+        FMath::Min(
+            Amount,
+            BushData.Berries.CurrentFruit
+        );
+
+
+    BushData.Berries.CurrentFruit -=
+        Harvested;
+
+
+    GenerateFruit();
+
+
+    return Harvested;
+}
+
+
+// ============================================================
+// FRUIT REGROWTH
+// ============================================================
+
+void AMedievalBush::RegrowFruit(
+    float DeltaTime
+)
+{
+    if (
+        !BushData.Berries.bProducesFruit
+    )
+    {
+        return;
+    }
+
+
+    if (
+        BushData.Berries.CurrentFruit
+        >=
+        BushData.Berries.MaximumFruit
+    )
+    {
+        return;
+    }
+
+
+    BushData.Berries.CurrentFruit +=
+        FMath::FloorToInt(
+            DeltaTime *
+            BushData.Berries.FruitGrowthRate
+        );
+}
+
+
+// ============================================================
+// WIND
+// ============================================================
+
+void AMedievalBush::ApplyWind(
+    FVector Direction,
+    float Strength
+)
+{
+    if (!Branches)
+        return;
+
+
+    const FRotator Rotation =
+        Direction.Rotation();
+
+
+    Branches->SetRelativeRotation(
+        Rotation *
+        (
+            Strength *
+            BushData.Wind.BranchMovement
+        )
+    );
+
+
+    Leaves->SetRelativeRotation(
+        Rotation *
+        (
+            Strength *
+            BushData.Wind.LeafMovement
+        )
+    );
+}
