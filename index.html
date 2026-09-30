@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lords of Castles — Kingdoms of the Medieval Age</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at 30% 20%, #4b4638 0%, transparent 50%),
+        radial-gradient(circle at 70% 80%, #3a3328 0%, transparent 50%),
+        linear-gradient(180deg, #25231d 0%, #14120f 100%);
+    color: #ead8b2;
+    font-family: Georgia, "Times New Roman", serif;
+    padding: 40px 20px;
+}
+
+.header {
+    text-align: center;
+    max-width: 900px;
+    margin: 0 auto 50px;
+}
+
+.header h1 {
+    font-size: 42px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #f0ddb3;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.7);
+    margin-bottom: 10px;
+}
+
+.header .subtitle {
+    font-size: 16px;
+    letter-spacing: 2px;
+    color: #c7a86e;
+    text-transform: uppercase;
+}
+
+.header .ornament {
+    font-size: 28px;
+    color: #9c7948;
+    margin: 15px 0;
+    letter-spacing: 10px;
+}
+
+.header .description {
+    font-size: 15px;
+    line-height: 1.7;
+    color: #b8a578;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 18px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    background:
+        linear-gradient(180deg, rgba(61,48,34,0.98), rgba(25,20,15,0.98));
+    border: 2px solid #755a37;
+    border-radius: 4px;
+    padding: 24px 20px;
+    transition: 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #c29b5c, transparent);
+    opacity: 0;
+    transition: 0.2s;
+}
+
+.card:hover {
+    border-color: #c29b5c;
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.6);
+}
+
+.card:hover::before {
+    opacity: 1;
+}
+
+.card .icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+}
+
+.card .title {
+    font-size: 16px;
+    color: #f0dfbb;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+}
+
+.card .desc {
+    font-size: 12px;
+    color: #a89570;
+    line-height: 1.5;
+}
+
+.footer {
+    text-align: center;
+    margin-top: 50px;
+    color: #6b5a3e;
+    font-size: 12px;
+    letter-spacing: 1px;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div class="ornament">⚔ 🏰 ⚔</div>
+    <h1>Lords of Castles</h1>
+    <div class="subtitle">Kingdoms of the Medieval Age</div>
+    <div class="ornament">— — —</div>
+    <p class="description">
+        A medieval settlement builder. Manage families, food, resources,
+        construction, militia, and seasons. Click any module below to
+        explore the game's interactive prototypes.
+    </p>
+</div>
+
+<div class="grid">
+
+    <a class="card" href="visable">
+        <div class="icon">🏰</div>
+        <div class="title">Settlement HUD</div>
+        <div class="desc">Approval, families, resources, and the building menu overview.</div>
+    </a>
+
+    <a class="card" href="Placement">
+        <div class="icon">🏗️</div>
+        <div class="title">Placement</div>
+        <div class="desc">Place buildings on the terrain with rotation and camera controls.</div>
+    </a>
+
+    <a class="card" href="Structure Rotation">
+        <div class="icon">🔄</div>
+        <div class="title">Structure Rotation</div>
+        <div class="desc">Rotate and position structures on the game world map.</div>
+    </a>
+
+    <a class="card" href="Building menu">
+        <div class="icon">📋</div>
+        <div class="title">Building Menu</div>
+        <div class="desc">Browse the full catalogue of medieval buildings.</div>
+    </a>
+
+    <a class="card" href="Construction logic C++ and HTML">
+        <div class="icon">🧱</div>
+        <div class="title">Construction</div>
+        <div class="desc">Construction logic — resource costs, build queues, and progress.</div>
+    </a>
+
+    <a class="card" href="Calendar and Seasons">
+        <div class="icon">📅</div>
+        <div class="title">Calendar &amp; Seasons</div>
+        <div class="desc">Seasonal cycle affecting farming, weather, and settlement life.</div>
+    </a>
+
+    <a class="card" href="AI Adverseries">
+        <div class="icon">🌾</div>
+        <div class="title">Food System</div>
+        <div class="desc">Village food production, consumption, and storage management.</div>
+    </a>
+
+    <a class="card" href="Backyard Extensions HTML">
+        <div class="icon">🏡</div>
+        <div class="title">Backyard Production</div>
+        <div class="desc">Backyard extensions for farming and household production.</div>
+    </a>
+
+    <a class="card" href="Militia Requirements">
+        <div class="icon">🛡️</div>
+        <div class="title">Militia</div>
+        <div class="desc">Militia recruitment, equipment requirements, and defense.</div>
+    </a>
+
+    <a class="card" href="3D creation">
+        <div class="icon">🌍</div>
+        <div class="title">3D Kingdom</div>
+        <div class="desc">3D world creation and terrain visualization prototype.</div>
+    </a>
+
+    <a class="card" href="Menu display Html">
+        <div class="icon">📜</div>
+        <div class="title">Main Menu</div>
+        <div class="desc">The kingdom's main menu — new game, load, and options.</div>
+    </a>
+
+</div>
+
+<div class="footer">
+    Lords of Castles · Interactive Prototypes
+</div>
+
+</body>
+</html>
