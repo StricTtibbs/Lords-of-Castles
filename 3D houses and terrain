@@ -1,0 +1,722 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "MedievalTerrain.generated.h"
+
+UCLASS()
+class MEDIEVALGAME_API AMedievalTerrain : public AActor
+{
+    GENERATED_BODY()
+
+public:
+
+    AMedievalTerrain();
+
+protected:
+
+    virtual void BeginPlay() override;
+
+public:
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Terrain")
+    int32 SizeX = 100;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Terrain")
+    int32 SizeY = 100;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Terrain")
+    float CellSize = 200.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Terrain")
+    float MaximumHeight = 2500.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Terrain")
+    float MountainStrength = 1.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Terrain")
+    float NoiseScale = 0.025f;
+
+    UFUNCTION(BlueprintCallable)
+    void GenerateTerrain();
+
+private:
+
+    float GetTerrainHeight(float X, float Y) const;
+};
+2. MedievalTerrain.cpp
+#include "MedievalTerrain.h"
+
+#include "ProceduralMeshComponent.h"
+#include "Kismet/KismetMathLibrary.h"
+
+AMedievalTerrain::AMedievalTerrain()
+{
+    PrimaryActorTick.bCanEverTick = false;
+
+    RootComponent =
+        CreateDefaultSubobject<USceneComponent>(
+            TEXT("TerrainRoot")
+        );
+}
+
+void AMedievalTerrain::BeginPlay()
+{
+    Super::BeginPlay();
+
+    GenerateTerrain();
+}
+
+float AMedievalTerrain::GetTerrainHeight(
+    float X,
+    float Y
+) const
+{
+    // Large hills
+    float LargeHills =
+        FMath::PerlinNoise2D(
+            FVector2D(
+                X * NoiseScale,
+                Y * NoiseScale
+            )
+        );
+
+    // Smaller terrain variation
+    float SmallDetail =
+        FMath::PerlinNoise2D(
+            FVector2D(
+                X * NoiseScale * 4.0f,
+                Y * NoiseScale * 4.0f
+            )
+        );
+
+    // Very small surface detail
+    float FineDetail =
+        FMath::PerlinNoise2D(
+            FVector2D(
+                X * NoiseScale * 12.0f,
+                Y * NoiseScale * 12.0f
+            )
+        );
+
+    float Height =
+        LargeHills * MaximumHeight;
+
+    Height +=
+        SmallDetail *
+        MaximumHeight *
+        0.25f;
+
+    Height +=
+        FineDetail *
+        MaximumHeight *
+        0.05f;
+
+    return Height * MountainStrength;
+}
+
+void AMedievalTerrain::GenerateTerrain()
+{
+    UProceduralMeshComponent* TerrainMesh =
+        NewObject<UProceduralMeshComponent>(
+            this,
+            TEXT("TerrainMesh")
+        );
+
+    TerrainMesh->RegisterComponent();
+
+    TerrainMesh->AttachToComponent(
+        RootComponent,
+        FAttachmentTransformRules::KeepRelativeTransform
+    );
+
+    TArray<FVector> Vertices;
+    TArray<int32> Triangles;
+    TArray<FVector> Normals;
+    TArray<FVector2D> UVs;
+    TArray<FLinearColor> Colors;
+    TArray<FProcMeshTangent> Tangents;
+
+    const int32 VertexCountX = SizeX + 1;
+    const int32 VertexCountY = SizeY + 1;
+
+    Vertices.Reserve(
+        VertexCountX *
+        VertexCountY
+    );
+
+    UVs.Reserve(
+        VertexCountX *
+        VertexCountY
+    );
+
+    // =========================================================
+    // CREATE TERRAIN VERTICES
+    // =========================================================
+
+    for (int32 Y = 0; Y < VertexCountY; Y++)
+    {
+        for (int32 X = 0; X < VertexCountX; X++)
+        {
+            float WorldX =
+                X * CellSize;
+
+            float WorldY =
+                Y * CellSize;
+
+            float Height =
+                GetTerrainHeight(
+                    WorldX,
+                    WorldY
+                );
+
+            Vertices.Add(
+                FVector(
+                    WorldX,
+                    WorldY,
+                    Height
+                )
+            );
+
+            UVs.Add(
+                FVector2D(
+                    static_cast<float>(X) /
+                    SizeX,
+
+                    static_cast<float>(Y) /
+                    SizeY
+                )
+            );
+        }
+    }
+
+    // =========================================================
+    // CREATE TRIANGLES
+    // =========================================================
+
+    for (int32 Y = 0; Y < SizeY; Y++)
+    {
+        for (int32 X = 0; X < SizeX; X++)
+        {
+            int32 A =
+                Y * VertexCountX + X;
+
+            int32 B =
+                A + 1;
+
+            int32 C =
+                A + VertexCountX;
+
+            int32 D =
+                C + 1;
+
+            Triangles.Add(A);
+            Triangles.Add(C);
+            Triangles.Add(B);
+
+            Triangles.Add(B);
+            Triangles.Add(C);
+            Triangles.Add(D);
+        }
+    }
+
+    // =========================================================
+    // CREATE MESH
+    // =========================================================
+
+    TerrainMesh->CreateMeshSection_LinearColor(
+        0,
+        Vertices,
+        Triangles,
+        Normals,
+        UVs,
+        Colors,
+        Tangents,
+        true
+    );
+
+    TerrainMesh->bUseComplexAsSimpleCollision = true;
+
+    TerrainMesh->SetCollisionEnabled(
+        ECollisionEnabled::QueryAndPhysics
+    );
+}
+
+This produces a genuine 3D landscape with multiple layers of procedural height variation.
+
+3. Medieval 3D House
+MedievalHouse.h
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "MedievalHouse.generated.h"
+
+UCLASS()
+class MEDIEVALGAME_API AMedievalHouse : public AActor
+{
+    GENERATED_BODY()
+
+public:
+
+    AMedievalHouse();
+
+protected:
+
+    virtual void BeginPlay() override;
+
+public:
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="House")
+    float HouseWidth = 700.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="House")
+    float HouseLength = 900.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="House")
+    float WallHeight = 450.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="House")
+    float WallThickness = 35.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="House")
+    float RoofHeight = 350.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="House")
+    bool HasChimney = true;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="House")
+    bool HasDoor = true;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="House")
+    bool HasWindows = true;
+
+    UFUNCTION(BlueprintCallable)
+    void BuildHouse();
+
+private:
+
+    void CreateWall(
+        FVector Location,
+        FVector Scale
+    );
+
+    void CreateRoof(
+        FVector Location,
+        FVector Scale
+    );
+
+    void CreateDoor(
+        FVector Location
+    );
+
+    void CreateWindow(
+        FVector Location
+    );
+
+    void CreateChimney(
+        FVector Location
+    );
+};
+MedievalHouse.cpp
+#include "MedievalHouse.h"
+
+#include "Components/StaticMeshComponent.h"
+#include "UObject/ConstructorHelpers.h"
+
+AMedievalHouse::AMedievalHouse()
+{
+    PrimaryActorTick.bCanEverTick = false;
+
+    RootComponent =
+        CreateDefaultSubobject<USceneComponent>(
+            TEXT("HouseRoot")
+        );
+}
+
+void AMedievalHouse::BeginPlay()
+{
+    Super::BeginPlay();
+
+    BuildHouse();
+}
+
+void AMedievalHouse::CreateWall(
+    FVector Location,
+    FVector Scale
+)
+{
+    UStaticMeshComponent* Wall =
+        NewObject<UStaticMeshComponent>(
+            this
+        );
+
+    Wall->RegisterComponent();
+
+    Wall->AttachToComponent(
+        RootComponent,
+        FAttachmentTransformRules::KeepRelativeTransform
+    );
+
+    Wall->SetRelativeLocation(
+        Location
+    );
+
+    Wall->SetRelativeScale3D(
+        Scale
+    );
+
+    static ConstructorHelpers::FObjectFinder<UStaticMesh>
+        CubeMesh(
+            TEXT("/Engine/BasicShapes/Cube")
+        );
+
+    if (CubeMesh.Succeeded())
+    {
+        Wall->SetStaticMesh(
+            CubeMesh.Object
+        );
+    }
+
+    Wall->SetCollisionEnabled(
+        ECollisionEnabled::QueryAndPhysics
+    );
+}
+
+void AMedievalHouse::CreateRoof(
+    FVector Location,
+    FVector Scale
+)
+{
+    UStaticMeshComponent* Roof =
+        NewObject<UStaticMeshComponent>(
+            this
+        );
+
+    Roof->RegisterComponent();
+
+    Roof->AttachToComponent(
+        RootComponent,
+        FAttachmentTransformRules::KeepRelativeTransform
+    );
+
+    Roof->SetRelativeLocation(
+        Location
+    );
+
+    Roof->SetRelativeScale3D(
+        Scale
+    );
+
+    static ConstructorHelpers::FObjectFinder<UStaticMesh>
+        RoofMesh(
+            TEXT("/Engine/BasicShapes/Cube")
+        );
+
+    if (RoofMesh.Succeeded())
+    {
+        Roof->SetStaticMesh(
+            RoofMesh.Object
+        );
+    }
+}
+
+void AMedievalHouse::CreateDoor(
+    FVector Location
+)
+{
+    UStaticMeshComponent* Door =
+        NewObject<UStaticMeshComponent>(
+            this
+        );
+
+    Door->RegisterComponent();
+
+    Door->AttachToComponent(
+        RootComponent,
+        FAttachmentTransformRules::KeepRelativeTransform
+    );
+
+    Door->SetRelativeLocation(
+        Location
+    );
+
+    Door->SetRelativeScale3D(
+        FVector(
+            0.9f,
+            0.15f,
+            2.5f
+        )
+    );
+
+    static ConstructorHelpers::FObjectFinder<UStaticMesh>
+        Mesh(
+            TEXT("/Engine/BasicShapes/Cube")
+        );
+
+    if (Mesh.Succeeded())
+    {
+        Door->SetStaticMesh(
+            Mesh.Object
+        );
+    }
+}
+
+void AMedievalHouse::CreateWindow(
+    FVector Location
+)
+{
+    UStaticMeshComponent* Window =
+        NewObject<UStaticMeshComponent>(
+            this
+        );
+
+    Window->RegisterComponent();
+
+    Window->AttachToComponent(
+        RootComponent,
+        FAttachmentTransformRules::KeepRelativeTransform
+    );
+
+    Window->SetRelativeLocation(
+        Location
+    );
+
+    Window->SetRelativeScale3D(
+        FVector(
+            0.7f,
+            0.12f,
+            0.8f
+        )
+    );
+
+    static ConstructorHelpers::FObjectFinder<UStaticMesh>
+        Mesh(
+            TEXT("/Engine/BasicShapes/Cube")
+        );
+
+    if (Mesh.Succeeded())
+    {
+        Window->SetStaticMesh(
+            Mesh.Object
+        );
+    }
+}
+
+void AMedievalHouse::CreateChimney(
+    FVector Location
+)
+{
+    UStaticMeshComponent* Chimney =
+        NewObject<UStaticMeshComponent>(
+            this
+        );
+
+    Chimney->RegisterComponent();
+
+    Chimney->AttachToComponent(
+        RootComponent,
+        FAttachmentTransformRules::KeepRelativeTransform
+    );
+
+    Chimney->SetRelativeLocation(
+        Location
+    );
+
+    Chimney->SetRelativeScale3D(
+        FVector(
+            0.5f,
+            0.5f,
+            1.5f
+        )
+    );
+
+    static ConstructorHelpers::FObjectFinder<UStaticMesh>
+        Mesh(
+            TEXT("/Engine/BasicShapes/Cube")
+        );
+
+    if (Mesh.Succeeded())
+    {
+        Chimney->SetStaticMesh(
+            Mesh.Object
+        );
+    }
+}
+
+void AMedievalHouse::BuildHouse()
+{
+    const float HalfWidth =
+        HouseWidth * 0.5f;
+
+    const float HalfLength =
+        HouseLength * 0.5f;
+
+
+    // =========================================================
+    // FRONT WALL
+    // =========================================================
+
+    CreateWall(
+        FVector(
+            0,
+            -HalfLength,
+            WallHeight * 0.5f
+        ),
+
+        FVector(
+            HouseWidth / 100.0f,
+            WallThickness / 100.0f,
+            WallHeight / 100.0f
+        )
+    );
+
+
+    // =========================================================
+    // BACK WALL
+    // =========================================================
+
+    CreateWall(
+        FVector(
+            0,
+            HalfLength,
+            WallHeight * 0.5f
+        ),
+
+        FVector(
+            HouseWidth / 100.0f,
+            WallThickness / 100.0f,
+            WallHeight / 100.0f
+        )
+    );
+
+
+    // =========================================================
+    // LEFT WALL
+    // =========================================================
+
+    CreateWall(
+        FVector(
+            -HalfWidth,
+            0,
+            WallHeight * 0.5f
+        ),
+
+        FVector(
+            WallThickness / 100.0f,
+            HouseLength / 100.0f,
+            WallHeight / 100.0f
+        )
+    );
+
+
+    // =========================================================
+    // RIGHT WALL
+    // =========================================================
+
+    CreateWall(
+        FVector(
+            HalfWidth,
+            0,
+            WallHeight * 0.5f
+        ),
+
+        FVector(
+            WallThickness / 100.0f,
+            HouseLength / 100.0f,
+            WallHeight / 100.0f
+        )
+    );
+
+
+    // =========================================================
+    // ROOF
+    // =========================================================
+
+    CreateRoof(
+        FVector(
+            0,
+            0,
+            WallHeight + RoofHeight * 0.5f
+        ),
+
+        FVector(
+            HouseWidth / 100.0f,
+            HouseLength / 100.0f,
+            RoofHeight / 100.0f
+        )
+    );
+
+
+    // =========================================================
+    // DOOR
+    // =========================================================
+
+    if (HasDoor)
+    {
+        CreateDoor(
+            FVector(
+                0,
+                -HalfLength - 20,
+                130
+            )
+        );
+    }
+
+
+    // =========================================================
+    // WINDOWS
+    // =========================================================
+
+    if (HasWindows)
+    {
+        CreateWindow(
+            FVector(
+                -HouseWidth * 0.25f,
+                -HalfLength - 20,
+                WallHeight * 0.55f
+            )
+        );
+
+        CreateWindow(
+            FVector(
+                HouseWidth * 0.25f,
+                -HalfLength - 20,
+                WallHeight * 0.55f
+            )
+        );
+
+        CreateWindow(
+            FVector(
+                -HalfWidth - 20,
+                0,
+                WallHeight * 0.55f
+            )
+        );
+
+        CreateWindow(
+            FVector(
+                HalfWidth + 20,
+                0,
+                WallHeight * 0.55f
+            )
+        );
+    }
+
+
+    // =========================================================
+    // CHIMNEY
+    // =========================================================
+
+    if (HasChimney)
+    {
+        CreateChimney(
+            FVector(
+                HouseWidth * 0.25f,
+                0,
+                WallHeight +
+                RoofHeight
+            )
+        );
+    }
+}
