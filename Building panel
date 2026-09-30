@@ -1,0 +1,491 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Blueprint/UserWidget.h"
+#include "MedievalBuildingPanel.generated.h"
+
+class UButton;
+class UVerticalBox;
+class UTextBlock;
+
+UCLASS()
+class MEDIEVALGAME_API UMedievalBuildingPanel : public UUserWidget
+{
+    GENERATED_BODY()
+
+protected:
+
+    virtual void NativeConstruct() override;
+
+    // =========================================================
+    // MAIN BUILDING CATEGORIES
+    // =========================================================
+
+    UPROPERTY(meta = (BindWidget))
+    UButton* IndustryButton;
+
+    UPROPERTY(meta = (BindWidget))
+    UButton* ResidentialButton;
+
+    UPROPERTY(meta = (BindWidget))
+    UButton* CommercialButton;
+
+    UPROPERTY(meta = (BindWidget))
+    UButton* CastleButton;
+
+    UPROPERTY(meta = (BindWidget))
+    UButton* RoadsButton;
+
+
+    // =========================================================
+    // BUILDING LIST
+    // =========================================================
+
+    UPROPERTY(meta = (BindWidget))
+    UVerticalBox* BuildingList;
+
+
+    // =========================================================
+    // CATEGORY FUNCTIONS
+    // =========================================================
+
+    UFUNCTION()
+    void OpenIndustry();
+
+    UFUNCTION()
+    void OpenResidential();
+
+    UFUNCTION()
+    void OpenCommercial();
+
+    UFUNCTION()
+    void OpenCastle();
+
+    UFUNCTION()
+    void OpenRoads();
+
+
+    // =========================================================
+    // BUILDING LIST FUNCTIONS
+    // =========================================================
+
+    void ClearBuildingList();
+
+    void AddBuilding(
+        const FString& BuildingName,
+        const FString& Description
+    );
+
+    void ShowCategory(
+        const FString& CategoryName
+    );
+};
+MedievalBuildingPanel.cpp
+#include "MedievalBuildingPanel.h"
+
+#include "Components/Button.h"
+#include "Components/TextBlock.h"
+#include "Components/VerticalBox.h"
+#include "Components/VerticalBoxSlot.h"
+
+
+// =============================================================
+// START
+// =============================================================
+
+void UMedievalBuildingPanel::NativeConstruct()
+{
+    Super::NativeConstruct();
+
+
+    // =========================================================
+    // CONNECT BUTTONS
+    // =========================================================
+
+    if (IndustryButton)
+    {
+        IndustryButton->OnClicked.AddDynamic(
+            this,
+            &UMedievalBuildingPanel::OpenIndustry
+        );
+    }
+
+    if (ResidentialButton)
+    {
+        ResidentialButton->OnClicked.AddDynamic(
+            this,
+            &UMedievalBuildingPanel::OpenResidential
+        );
+    }
+
+    if (CommercialButton)
+    {
+        CommercialButton->OnClicked.AddDynamic(
+            this,
+            &UMedievalBuildingPanel::OpenCommercial
+        );
+    }
+
+    if (CastleButton)
+    {
+        CastleButton->OnClicked.AddDynamic(
+            this,
+            &UMedievalBuildingPanel::OpenCastle
+        );
+    }
+
+    if (RoadsButton)
+    {
+        RoadsButton->OnClicked.AddDynamic(
+            this,
+            &UMedievalBuildingPanel::OpenRoads
+        );
+    }
+}
+
+
+// =============================================================
+// INDUSTRY
+// =============================================================
+
+void UMedievalBuildingPanel::OpenIndustry()
+{
+    ShowCategory(TEXT("Industry"));
+}
+
+
+// =============================================================
+// RESIDENTIAL
+// =============================================================
+
+void UMedievalBuildingPanel::OpenResidential()
+{
+    ShowCategory(TEXT("Residential"));
+}
+
+
+// =============================================================
+// COMMERCIAL
+// =============================================================
+
+void UMedievalBuildingPanel::OpenCommercial()
+{
+    ShowCategory(TEXT("Commercial"));
+}
+
+
+// =============================================================
+// CASTLE
+// =============================================================
+
+void UMedievalBuildingPanel::OpenCastle()
+{
+    ShowCategory(TEXT("Castle"));
+}
+
+
+// =============================================================
+// ROADS
+// =============================================================
+
+void UMedievalBuildingPanel::OpenRoads()
+{
+    ShowCategory(TEXT("Roads"));
+}
+
+
+// =============================================================
+// CLEAR LIST
+// =============================================================
+
+void UMedievalBuildingPanel::ClearBuildingList()
+{
+    if (BuildingList)
+    {
+        BuildingList->ClearChildren();
+    }
+}
+
+
+// =============================================================
+// ADD BUILDING
+// =============================================================
+
+void UMedievalBuildingPanel::AddBuilding(
+    const FString& BuildingName,
+    const FString& Description
+)
+{
+    if (!BuildingList)
+    {
+        return;
+    }
+
+
+    UTextBlock* BuildingText =
+        NewObject<UTextBlock>(
+            this
+        );
+
+
+    FString Text =
+        BuildingName +
+        TEXT("\n") +
+        Description;
+
+
+    BuildingText->SetText(
+        FText::FromString(Text)
+    );
+
+
+    BuildingText->SetAutoWrapText(
+        true
+    );
+
+
+    FSlateFontInfo Font =
+        BuildingText->GetFont();
+
+    Font.Size = 18;
+
+    BuildingText->SetFont(
+        Font
+    );
+
+
+    UVerticalBoxSlot* Slot =
+        BuildingList->AddChildToVerticalBox(
+            BuildingText
+        );
+
+
+    if (Slot)
+    {
+        Slot->SetPadding(
+            FMargin(
+                10.0f,
+                8.0f
+            )
+        );
+    }
+}
+
+
+// =============================================================
+// SHOW CATEGORY
+// =============================================================
+
+void UMedievalBuildingPanel::ShowCategory(
+    const FString& CategoryName
+)
+{
+    ClearBuildingList();
+
+
+    // =========================================================
+    // INDUSTRY
+    // =========================================================
+
+    if (CategoryName == TEXT("Industry"))
+    {
+        AddBuilding(
+            TEXT("Lumber Camp"),
+            TEXT("Produces logs from nearby forests.")
+        );
+
+        AddBuilding(
+            TEXT("Sawmill"),
+            TEXT("Converts logs into planks.")
+        );
+
+        AddBuilding(
+            TEXT("Quarry"),
+            TEXT("Extracts uncut stone.")
+        );
+
+        AddBuilding(
+            TEXT("Stonecutter"),
+            TEXT("Converts uncut stone into cut stone.")
+        );
+
+        AddBuilding(
+            TEXT("Blacksmith"),
+            TEXT("Produces swords, spears, halberds and pikes.")
+        );
+
+        AddBuilding(
+            TEXT("Shieldwright"),
+            TEXT("Produces large and small shields.")
+        );
+
+        AddBuilding(
+            TEXT("Armourer"),
+            TEXT("Produces helmets, mail and plate armour.")
+        );
+
+        AddBuilding(
+            TEXT("Weaver"),
+            TEXT("Uses flax to produce linen clothing and gambesons.")
+        );
+    }
+
+
+    // =========================================================
+    // RESIDENTIAL
+    // =========================================================
+
+    else if (
+        CategoryName ==
+        TEXT("Residential")
+    )
+    {
+        AddBuilding(
+            TEXT("Small House"),
+            TEXT("Provides accommodation for one family.")
+        );
+
+        AddBuilding(
+            TEXT("Medium House"),
+            TEXT("Provides a larger home with room for expansion.")
+        );
+
+        AddBuilding(
+            TEXT("Large House"),
+            TEXT("A large family residence with backyard space.")
+        );
+
+        AddBuilding(
+            TEXT("Backyard Garden"),
+            TEXT("Allows vegetables and herbs to be grown.")
+        );
+
+        AddBuilding(
+            TEXT("Chicken Coop"),
+            TEXT("Produces eggs and chickens.")
+        );
+
+        AddBuilding(
+            TEXT("Orchard"),
+            TEXT("Produces fruit depending on orchard size.")
+        );
+    }
+
+
+    // =========================================================
+    // COMMERCIAL
+    // =========================================================
+
+    else if (
+        CategoryName ==
+        TEXT("Commercial")
+    )
+    {
+        AddBuilding(
+            TEXT("Market"),
+            TEXT("Allows villagers to trade goods.")
+        );
+
+        AddBuilding(
+            TEXT("Market Stall"),
+            TEXT("Small trading location for individual families.")
+        );
+
+        AddBuilding(
+            TEXT("Trading Post"),
+            TEXT("Allows long-distance trade.")
+        );
+
+        AddBuilding(
+            TEXT("Warehouse"),
+            TEXT("Stores large quantities of resources.")
+        );
+
+        AddBuilding(
+            TEXT("Granary"),
+            TEXT("Stores food safely.")
+        );
+    }
+
+
+    // =========================================================
+    // CASTLE
+    // =========================================================
+
+    else if (
+        CategoryName ==
+        TEXT("Castle")
+    )
+    {
+        AddBuilding(
+            TEXT("Stone Keep"),
+            TEXT("Strong central defensive structure.")
+        );
+
+        AddBuilding(
+            TEXT("Castle Wall"),
+            TEXT("Heavy defensive wall.")
+        );
+
+        AddBuilding(
+            TEXT("Gatehouse"),
+            TEXT("Defends the entrance to the settlement.")
+        );
+
+        AddBuilding(
+            TEXT("Watchtower"),
+            TEXT("Provides a defensive observation position.")
+        );
+
+        AddBuilding(
+            TEXT("Barracks"),
+            TEXT("Houses and trains soldiers.")
+        );
+
+        AddBuilding(
+            TEXT("Armoury"),
+            TEXT("Stores military equipment.")
+        );
+
+        AddBuilding(
+            TEXT("Castle Courtyard"),
+            TEXT("Central area for the castle complex.")
+        );
+    }
+
+
+    // =========================================================
+    // ROADS
+    // =========================================================
+
+    else if (
+        CategoryName ==
+        TEXT("Roads")
+    )
+    {
+        AddBuilding(
+            TEXT("Dirt Path"),
+            TEXT("Simple path used by villagers.")
+        );
+
+        AddBuilding(
+            TEXT("Dirt Road"),
+            TEXT("Wider road for carts and regular traffic.")
+        );
+
+        AddBuilding(
+            TEXT("Stone Road"),
+            TEXT("Durable paved road.")
+        );
+
+        AddBuilding(
+            TEXT("Main Road"),
+            TEXT("Large road connecting important settlements.")
+        );
+
+        AddBuilding(
+            TEXT("Bridge"),
+            TEXT("Allows people and carts to cross water.")
+        );
+    }
+}
