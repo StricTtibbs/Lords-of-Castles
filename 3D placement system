@@ -1,0 +1,687 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "MedievalBuildingPlacer.generated.h"
+
+class UStaticMeshComponent;
+class UMaterialInterface;
+
+UCLASS()
+class MEDIEVALGAME_API AMedievalBuildingPlacer : public AActor
+{
+    GENERATED_BODY()
+
+public:
+
+    AMedievalBuildingPlacer();
+
+    virtual void Tick(float DeltaTime) override;
+
+    // Select a building to place
+    UFUNCTION(BlueprintCallable)
+    void StartPlacement(
+        UStaticMesh* BuildingMesh
+    );
+
+    // Cancel placement
+    UFUNCTION(BlueprintCallable)
+    void CancelPlacement();
+
+    // Confirm placement
+    UFUNCTION(BlueprintCallable)
+    void ConfirmPlacement();
+
+    // Rotate building
+    UFUNCTION(BlueprintCallable)
+    void RotateBuilding();
+
+protected:
+
+    virtual void BeginPlay() override;
+
+private:
+
+    // =========================================================
+    // PREVIEW
+    // =========================================================
+
+    UPROPERTY()
+    UStaticMeshComponent* PreviewMesh;
+
+    UPROPERTY()
+    UStaticMesh* SelectedBuildingMesh;
+
+
+    // =========================================================
+    // MATERIALS
+    // =========================================================
+
+    UPROPERTY(EditAnywhere, Category="Placement")
+    UMaterialInterface* ValidMaterial;
+
+    UPROPERTY(EditAnywhere, Category="Placement")
+    UMaterialInterface* InvalidMaterial;
+
+
+    // =========================================================
+    // PLACEMENT SETTINGS
+    // =========================================================
+
+    UPROPERTY(EditAnywhere, Category="Placement")
+    float GridSize = 50.0f;
+
+    UPROPERTY(EditAnywhere, Category="Placement")
+    float RotationAmount = 15.0f;
+
+    UPROPERTY(EditAnywhere, Category="Placement")
+    float GroundOffset = 2.0f;
+
+
+    // =========================================================
+    // STATE
+    // =========================================================
+
+    bool bIsPlacing;
+
+    bool bValidPlacement;
+
+    float CurrentRotation;
+
+
+    // =========================================================
+    // FUNCTIONS
+    // =========================================================
+
+    void UpdatePreview();
+
+    bool FindGroundLocation(
+        FVector& OutLocation
+    );
+
+    bool IsPlacementValid(
+        FVector Location
+    );
+
+    FVector SnapToGrid(
+        FVector Location
+    );
+
+    void UpdatePreviewMaterial();
+};
+MedievalBuildingPlacer.cpp
+#include "MedievalBuildingPlacer.h"
+
+#include "Components/StaticMeshComponent.h"
+#include "Engine/World.h"
+#include "Engine/StaticMesh.h"
+#include "GameFramework/PlayerController.h"
+#include "Kismet/GameplayStatics.h"
+#include "DrawDebugHelpers.h"
+
+
+AMedievalBuildingPlacer::AMedievalBuildingPlacer()
+{
+    PrimaryActorTick.bCanEverTick = true;
+
+    RootComponent =
+        CreateDefaultSubobject<USceneComponent>(
+            TEXT("PlacementRoot")
+        );
+
+    PreviewMesh =
+        CreateDefaultSubobject<UStaticMeshComponent>(
+            TEXT("PreviewMesh")
+        );
+
+    PreviewMesh->SetupAttachment(
+        RootComponent
+    );
+
+    PreviewMesh->SetCollisionEnabled(
+        ECollisionEnabled::NoCollision
+    );
+
+    PreviewMesh->SetVisibility(false);
+
+    bIsPlacing = false;
+
+    bValidPlacement = false;
+
+    CurrentRotation = 0.0f;
+}
+
+
+void AMedievalBuildingPlacer::BeginPlay()
+{
+    Super::BeginPlay();
+}
+
+
+void AMedievalBuildingPlacer::Tick(
+    float DeltaTime
+)
+{
+    Super::Tick(DeltaTime);
+
+    if (bIsPlacing)
+    {
+        UpdatePreview();
+    }
+}
+
+
+// =============================================================
+// START PLACEMENT
+// =============================================================
+
+void AMedievalBuildingPlacer::StartPlacement(
+    UStaticMesh* BuildingMesh
+)
+{
+    if (!BuildingMesh)
+    {
+        return;
+    }
+
+    SelectedBuildingMesh =
+        BuildingMesh;
+
+    PreviewMesh->SetStaticMesh(
+        SelectedBuildingMesh
+    );
+
+    PreviewMesh->SetVisibility(true);
+
+    PreviewMesh->SetCollisionEnabled(
+        ECollisionEnabled::NoCollision
+    );
+
+    CurrentRotation = 0.0f;
+
+    bIsPlacing = true;
+
+    UpdatePreview();
+}
+
+
+// =============================================================
+// CANCEL
+// =============================================================
+
+void AMedievalBuildingPlacer::CancelPlacement()
+{
+    bIsPlacing = false;
+
+    PreviewMesh->SetVisibility(false);
+
+    SelectedBuildingMesh = nullptr;
+}
+
+
+// =============================================================
+// ROTATE
+// =============================================================
+
+void AMedievalBuildingPlacer::RotateBuilding()
+{
+    if (!bIsPlacing)
+    {
+        return;
+    }
+
+    CurrentRotation +=
+        RotationAmount;
+
+    if (CurrentRotation >= 360.0f)
+    {
+        CurrentRotation -= 360.0f;
+    }
+
+    FRotator Rotation(
+        0.0f,
+        CurrentRotation,
+        0.0f
+    );
+
+    PreviewMesh->SetRelativeRotation(
+        Rotation
+    );
+}
+
+
+// =============================================================
+// UPDATE PREVIEW
+// =============================================================
+
+void AMedievalBuildingPlacer::UpdatePreview()
+{
+    FVector GroundLocation;
+
+    if (!FindGroundLocation(
+        GroundLocation
+    ))
+    {
+        bValidPlacement = false;
+
+        UpdatePreviewMaterial();
+
+        return;
+    }
+
+    GroundLocation =
+        SnapToGrid(
+            GroundLocation
+        );
+
+    PreviewMesh->SetWorldLocation(
+        GroundLocation
+    );
+
+    bValidPlacement =
+        IsPlacementValid(
+            GroundLocation
+        );
+
+    UpdatePreviewMaterial();
+}
+
+
+// =============================================================
+// FIND TERRAIN
+// =============================================================
+
+bool AMedievalBuildingPlacer::FindGroundLocation(
+    FVector& OutLocation
+)
+{
+    APlayerController* PlayerController =
+        UGameplayStatics::GetPlayerController(
+            GetWorld(),
+            0
+        );
+
+    if (!PlayerController)
+    {
+        return false;
+    }
+
+    float MouseX;
+    float MouseY;
+
+    if (!PlayerController->GetMousePosition(
+        MouseX,
+        MouseY
+    ))
+    {
+        return false;
+    }
+
+    FVector WorldOrigin;
+    FVector WorldDirection;
+
+    if (!PlayerController->DeprojectScreenPositionToWorld(
+        MouseX,
+        MouseY,
+        WorldOrigin,
+        WorldDirection
+    ))
+    {
+        return false;
+    }
+
+    FVector TraceStart =
+        WorldOrigin;
+
+    FVector TraceEnd =
+        WorldOrigin +
+        WorldDirection * 100000.0f;
+
+    FHitResult Hit;
+
+    FCollisionQueryParams Params;
+
+    Params.AddIgnoredActor(
+        this
+    );
+
+    bool bHit =
+        GetWorld()->LineTraceSingleByChannel(
+            Hit,
+            TraceStart,
+            TraceEnd,
+            ECC_Visibility,
+            Params
+        );
+
+    if (!bHit)
+    {
+        return false;
+    }
+
+    OutLocation =
+        Hit.Location;
+
+    OutLocation.Z +=
+        GroundOffset;
+
+    return true;
+}
+
+
+// =============================================================
+// GRID SNAP
+// =============================================================
+
+FVector AMedievalBuildingPlacer::SnapToGrid(
+    FVector Location
+)
+{
+    Location.X =
+        FMath::GridSnap(
+            Location.X,
+            GridSize
+        );
+
+    Location.Y =
+        FMath::GridSnap(
+            Location.Y,
+            GridSize
+        );
+
+    return Location;
+}
+
+
+// =============================================================
+// VALIDATION
+// =============================================================
+
+bool AMedievalBuildingPlacer::IsPlacementValid(
+    FVector Location
+)
+{
+    if (!SelectedBuildingMesh)
+    {
+        return false;
+    }
+
+    // ---------------------------------------------------------
+    // Check terrain slope
+    // ---------------------------------------------------------
+
+    const float TraceDistance = 250.0f;
+
+    FVector Center =
+        Location +
+        FVector(
+            0,
+            0,
+            100
+        );
+
+    FVector Down =
+        Location -
+        FVector(
+            0,
+            0,
+            TraceDistance
+        );
+
+    FHitResult CenterHit;
+
+    if (!GetWorld()->LineTraceSingleByChannel(
+        CenterHit,
+        Center,
+        Down,
+        ECC_Visibility
+    ))
+    {
+        return false;
+    }
+
+    // ---------------------------------------------------------
+    // Building bounds
+    // ---------------------------------------------------------
+
+    FBox Bounds =
+        SelectedBuildingMesh
+        ->GetBoundingBox();
+
+    FVector Extent =
+        Bounds.GetExtent();
+
+    const int32 TestPoints = 5;
+
+    float MinHeight = FLT_MAX;
+    float MaxHeight = -FLT_MAX;
+
+    for (
+        int32 X = 0;
+        X < TestPoints;
+        X++
+    )
+    {
+        for (
+            int32 Y = 0;
+            Y < TestPoints;
+            Y++
+        )
+        {
+            float AlphaX =
+                static_cast<float>(X) /
+                (TestPoints - 1);
+
+            float AlphaY =
+                static_cast<float>(Y) /
+                (TestPoints - 1);
+
+            float LocalX =
+                FMath::Lerp(
+                    -Extent.X,
+                    Extent.X,
+                    AlphaX
+                );
+
+            float LocalY =
+                FMath::Lerp(
+                    -Extent.Y,
+                    Extent.Y,
+                    AlphaY
+                );
+
+            FVector TestPosition =
+                Location +
+                FVector(
+                    LocalX,
+                    LocalY,
+                    300
+                );
+
+            FVector TestEnd =
+                TestPosition -
+                FVector(
+                    0,
+                    0,
+                    600
+                );
+
+            FHitResult TerrainHit;
+
+            if (
+                GetWorld()
+                ->LineTraceSingleByChannel(
+                    TerrainHit,
+                    TestPosition,
+                    TestEnd,
+                    ECC_Visibility
+                )
+            )
+            {
+                MinHeight =
+                    FMath::Min(
+                        MinHeight,
+                        TerrainHit.Location.Z
+                    );
+
+                MaxHeight =
+                    FMath::Max(
+                        MaxHeight,
+                        TerrainHit.Location.Z
+                    );
+            }
+        }
+    }
+
+    // Don't allow buildings on excessively steep ground
+    const float MaximumHeightDifference =
+        150.0f;
+
+    if (
+        MaxHeight -
+        MinHeight >
+        MaximumHeightDifference
+    )
+    {
+        return false;
+    }
+
+    return true;
+}
+
+
+// =============================================================
+// PREVIEW MATERIAL
+// =============================================================
+
+void AMedievalBuildingPlacer::UpdatePreviewMaterial()
+{
+    if (!PreviewMesh)
+    {
+        return;
+    }
+
+    if (bValidPlacement)
+    {
+        if (ValidMaterial)
+        {
+            PreviewMesh->SetMaterial(
+                0,
+                ValidMaterial
+            );
+        }
+    }
+    else
+    {
+        if (InvalidMaterial)
+        {
+            PreviewMesh->SetMaterial(
+                0,
+                InvalidMaterial
+            );
+        }
+    }
+}
+
+
+// =============================================================
+// CONFIRM
+// =============================================================
+
+void AMedievalBuildingPlacer::ConfirmPlacement()
+{
+    if (!bIsPlacing)
+    {
+        return;
+    }
+
+    if (!bValidPlacement)
+    {
+        return;
+    }
+
+    if (!SelectedBuildingMesh)
+    {
+        return;
+    }
+
+    FVector Location =
+        PreviewMesh->GetComponentLocation();
+
+    FRotator Rotation =
+        PreviewMesh->GetComponentRotation();
+
+
+    // =========================================================
+    // SPAWN REAL BUILDING
+    // =========================================================
+
+    FActorSpawnParameters SpawnParameters;
+
+    SpawnParameters.SpawnCollisionHandlingOverride =
+        ESpawnActorCollisionHandlingMethod::
+        AdjustIfPossibleButAlwaysSpawn;
+
+    AActor* Building =
+        GetWorld()->SpawnActor<AActor>(
+            AActor::StaticClass(),
+            Location,
+            Rotation,
+            SpawnParameters
+        );
+
+
+    if (Building)
+    {
+        UStaticMeshComponent*
+        BuildingMeshComponent =
+            NewObject<UStaticMeshComponent>(
+                Building,
+                TEXT("BuildingMesh")
+            );
+
+        BuildingMeshComponent->RegisterComponent();
+
+        BuildingMeshComponent->SetStaticMesh(
+            SelectedBuildingMesh
+        );
+
+        BuildingMeshComponent->SetWorldLocation(
+            Location
+        );
+
+        BuildingMeshComponent->SetWorldRotation(
+            Rotation
+        );
+
+        BuildingMeshComponent->SetCollisionEnabled(
+            ECollisionEnabled::QueryAndPhysics
+        );
+
+        Building->SetRootComponent(
+            BuildingMeshComponent
+        );
+    }
+
+
+    // =========================================================
+    // FINISH
+    // =========================================================
+
+    CancelPlacement();
+}
+Controls
+
+Connect your input actions like this:
+
+Left Mouse Button
+        ↓
+ConfirmPlacement()
+
+R
+        ↓
+RotateBuilding()
+
+Right Mouse Button / ESC
+        ↓
+CancelPlacement()
