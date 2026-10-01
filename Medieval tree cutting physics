@@ -1,0 +1,825 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "MedievalPhysicsTree.generated.h"
+
+class UStaticMeshComponent;
+class UGeometryCollectionComponent;
+class UParticleSystem;
+class USoundBase;
+
+UENUM(BlueprintType)
+enum class ETreeSpecies : uint8
+{
+    Oak,
+    Ash,
+    Beech,
+    Birch,
+    Willow,
+    Pine,
+    Fir,
+    Spruce
+};
+
+UENUM(BlueprintType)
+enum class ETreeState : uint8
+{
+    Healthy,
+    BeingCut,
+    Falling,
+    Fallen,
+    Dead
+};
+
+UCLASS()
+class MEDIEVALGAME_API AMedievalPhysicsTree : public AActor
+{
+    GENERATED_BODY()
+
+public:
+
+    AMedievalPhysicsTree();
+
+protected:
+
+    virtual void BeginPlay() override;
+
+public:
+
+    virtual void Tick(float DeltaTime) override;
+
+
+    // =========================================================
+    // TREE COMPONENTS
+    // =========================================================
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Tree")
+    USceneComponent* TreeRoot;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Tree")
+    UStaticMeshComponent* TrunkMesh;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Tree")
+    UStaticMeshComponent* FoliageMesh;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Tree")
+    UGeometryCollectionComponent* PhysicsTree;
+
+
+    // =========================================================
+    // TREE INFORMATION
+    // =========================================================
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Tree")
+    ETreeSpecies Species;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Tree")
+    ETreeState State;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Tree")
+    float TreeHeight = 900.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Tree")
+    float TrunkRadius = 45.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Tree")
+    float TreeMass = 1800.0f;
+
+
+    // =========================================================
+    // CUTTING
+    // =========================================================
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Cutting")
+    float RequiredCutDamage = 100.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Cutting")
+    float CurrentCutDamage = 0.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Cutting")
+    float CutDepth = 0.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Cutting")
+    float MaximumCutDepth = 1.0f;
+
+
+    // =========================================================
+    // FALLING
+    // =========================================================
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Falling")
+    float FallForce = 250000.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Falling")
+    float FallTorque = 500000.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Falling")
+    float NaturalLean = 0.05f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Falling")
+    float WindInfluence = 0.15f;
+
+
+    // =========================================================
+    // AUDIO
+    // =========================================================
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Audio")
+    USoundBase* CuttingSound;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Audio")
+    USoundBase* TreeFallingSound;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Audio")
+    USoundBase* TreeImpactSound;
+
+
+    // =========================================================
+    // EFFECTS
+    // =========================================================
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effects")
+    UParticleSystem* SawdustEffect;
+
+
+    // =========================================================
+    // FUNCTIONS
+    // =========================================================
+
+    UFUNCTION(BlueprintCallable, Category="Tree")
+    void CutTree(float Damage);
+
+    UFUNCTION(BlueprintCallable, Category="Tree")
+    void ApplyAxeHit(
+        FVector HitLocation,
+        FVector HitDirection,
+        float Damage
+    );
+
+    UFUNCTION(BlueprintCallable, Category="Tree")
+    void FellTree();
+
+    UFUNCTION(BlueprintCallable, Category="Tree")
+    void ResetTree();
+
+    UFUNCTION(BlueprintPure, Category="Tree")
+    float GetCutPercentage() const;
+
+    UFUNCTION(BlueprintPure, Category="Tree")
+    bool IsFallen() const;
+
+
+private:
+
+    FVector CalculateFallDirection() const;
+
+    void EnablePhysics();
+
+    void HideLivingTree();
+
+    void SpawnFallingEffects();
+
+    void CheckTreeImpact();
+
+    bool bImpactDetected;
+
+    FVector FallDirection;
+
+    float PreviousHeight;
+};
+2. MedievalPhysicsTree.cpp
+#include "MedievalPhysicsTree.h"
+
+#include "Components/StaticMeshComponent.h"
+#include "GeometryCollection/GeometryCollectionComponent.h"
+
+#include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystem.h"
+
+#include "Engine/World.h"
+
+
+AMedievalPhysicsTree::AMedievalPhysicsTree()
+{
+    PrimaryActorTick.bCanEverTick = true;
+
+
+    // =========================================================
+    // ROOT
+    // =========================================================
+
+    TreeRoot =
+        CreateDefaultSubobject<USceneComponent>(
+            TEXT("TreeRoot")
+        );
+
+    RootComponent = TreeRoot;
+
+
+    // =========================================================
+    // TRUNK
+    // =========================================================
+
+    TrunkMesh =
+        CreateDefaultSubobject<UStaticMeshComponent>(
+            TEXT("Trunk")
+        );
+
+    TrunkMesh->SetupAttachment(
+        TreeRoot
+    );
+
+    TrunkMesh->SetCollisionEnabled(
+        ECollisionEnabled::QueryAndPhysics
+    );
+
+    TrunkMesh->SetCollisionObjectType(
+        ECC_WorldStatic
+    );
+
+
+    // =========================================================
+    // FOLIAGE
+    // =========================================================
+
+    FoliageMesh =
+        CreateDefaultSubobject<UStaticMeshComponent>(
+            TEXT("Foliage")
+        );
+
+    FoliageMesh->SetupAttachment(
+        TreeRoot
+    );
+
+    FoliageMesh->SetCollisionEnabled(
+        ECollisionEnabled::NoCollision
+    );
+
+
+    // =========================================================
+    // CHAOS PHYSICS TREE
+    // =========================================================
+
+    PhysicsTree =
+        CreateDefaultSubobject<UGeometryCollectionComponent>(
+            TEXT("PhysicsTree")
+        );
+
+    PhysicsTree->SetupAttachment(
+        TreeRoot
+    );
+
+    PhysicsTree->SetCollisionEnabled(
+        ECollisionEnabled::NoCollision
+    );
+
+    PhysicsTree->SetVisibility(
+        false
+    );
+
+
+    // =========================================================
+    // DEFAULT VALUES
+    // =========================================================
+
+    Species =
+        ETreeSpecies::Oak;
+
+    State =
+        ETreeState::Healthy;
+
+    RequiredCutDamage =
+        100.0f;
+
+    CurrentCutDamage =
+        0.0f;
+
+    CutDepth =
+        0.0f;
+
+    bImpactDetected =
+        false;
+
+    PreviousHeight =
+        0.0f;
+}
+
+
+// =============================================================
+// BEGIN PLAY
+// =============================================================
+
+void AMedievalPhysicsTree::BeginPlay()
+{
+    Super::BeginPlay();
+
+    PreviousHeight =
+        GetActorLocation().Z;
+}
+
+
+// =============================================================
+// TICK
+// =============================================================
+
+void AMedievalPhysicsTree::Tick(
+    float DeltaTime
+)
+{
+    Super::Tick(DeltaTime);
+
+
+    if (
+        State ==
+        ETreeState::Falling
+    )
+    {
+        CheckTreeImpact();
+    }
+}
+
+
+// =============================================================
+// CUT TREE
+// =============================================================
+
+void AMedievalPhysicsTree::CutTree(
+    float Damage
+)
+{
+    if (
+        State ==
+        ETreeState::Fallen ||
+        State ==
+        ETreeState::Dead
+    )
+    {
+        return;
+    }
+
+
+    State =
+        ETreeState::BeingCut;
+
+
+    CurrentCutDamage +=
+        Damage;
+
+
+    CurrentCutDamage =
+        FMath::Clamp(
+            CurrentCutDamage,
+            0.0f,
+            RequiredCutDamage
+        );
+
+
+    CutDepth =
+        CurrentCutDamage /
+        RequiredCutDamage;
+
+
+    // ---------------------------------------------------------
+    // Cutting sound
+    // ---------------------------------------------------------
+
+    if (CuttingSound)
+    {
+        UGameplayStatics::PlaySoundAtLocation(
+            this,
+            CuttingSound,
+            GetActorLocation()
+        );
+    }
+
+
+    // ---------------------------------------------------------
+    // Tree falls when sufficiently cut
+    // ---------------------------------------------------------
+
+    if (
+        CurrentCutDamage >=
+        RequiredCutDamage
+    )
+    {
+        FellTree();
+    }
+}
+
+
+// =============================================================
+// AXE HIT
+// =============================================================
+
+void AMedievalPhysicsTree::ApplyAxeHit(
+    FVector HitLocation,
+    FVector HitDirection,
+    float Damage
+)
+{
+    if (
+        State ==
+        ETreeState::Fallen ||
+        State ==
+        ETreeState::Dead
+    )
+    {
+        return;
+    }
+
+
+    // ---------------------------------------------------------
+    // Damage
+    // ---------------------------------------------------------
+
+    CutTree(
+        Damage
+    );
+
+
+    // ---------------------------------------------------------
+    // Sawdust
+    // ---------------------------------------------------------
+
+    if (
+        SawdustEffect
+    )
+    {
+        UGameplayStatics::SpawnEmitterAtLocation(
+            GetWorld(),
+            SawdustEffect,
+            HitLocation,
+            HitDirection.Rotation()
+        );
+    }
+
+
+    // ---------------------------------------------------------
+    // Rotate the visual cut direction
+    // ---------------------------------------------------------
+
+    if (
+        State ==
+        ETreeState::BeingCut
+    )
+    {
+        FVector HorizontalDirection =
+            FVector(
+                HitDirection.X,
+                HitDirection.Y,
+                0.0f
+            ).GetSafeNormal();
+
+
+        if (
+            !HorizontalDirection.IsNearlyZero()
+        )
+        {
+            FallDirection =
+                HorizontalDirection;
+        }
+    }
+}
+
+
+// =============================================================
+// CALCULATE FALL DIRECTION
+// =============================================================
+
+FVector AMedievalPhysicsTree::CalculateFallDirection() const
+{
+    FVector Direction =
+        FallDirection;
+
+
+    if (
+        Direction.IsNearlyZero()
+    )
+    {
+        Direction =
+            GetActorForwardVector();
+    }
+
+
+    // Add natural variation
+    Direction +=
+        FVector(
+            FMath::FRandRange(
+                -NaturalLean,
+                NaturalLean
+            ),
+
+            FMath::FRandRange(
+                -NaturalLean,
+                NaturalLean
+            ),
+
+            0.0f
+        );
+
+
+    Direction.Z = 0.0f;
+
+
+    return Direction.GetSafeNormal();
+}
+
+
+// =============================================================
+// FALL TREE
+// =============================================================
+
+void AMedievalPhysicsTree::FellTree()
+{
+    if (
+        State ==
+        ETreeState::Falling ||
+        State ==
+        ETreeState::Fallen
+    )
+    {
+        return;
+    }
+
+
+    State =
+        ETreeState::Falling;
+
+
+    FallDirection =
+        CalculateFallDirection();
+
+
+    // =========================================================
+    // HIDE STATIC TREE
+    // =========================================================
+
+    HideLivingTree();
+
+
+    // =========================================================
+    // ENABLE CHAOS
+    // =========================================================
+
+    EnablePhysics();
+
+
+    // =========================================================
+    // FALLING SOUND
+    // =========================================================
+
+    if (TreeFallingSound)
+    {
+        UGameplayStatics::PlaySoundAtLocation(
+            this,
+            TreeFallingSound,
+            GetActorLocation()
+        );
+    }
+
+
+    // =========================================================
+    // PHYSICS FORCE
+    // =========================================================
+
+    FVector Force =
+        FallDirection *
+        FallForce;
+
+
+    FVector Torque =
+        FVector(
+            -FallDirection.Y,
+            FallDirection.X,
+            0.0f
+        ) *
+        FallTorque;
+
+
+    PhysicsTree->AddForce(
+        Force
+    );
+
+
+    PhysicsTree->AddTorqueInRadians(
+        Torque
+    );
+}
+
+
+// =============================================================
+// ENABLE PHYSICS
+// =============================================================
+
+void AMedievalPhysicsTree::EnablePhysics()
+{
+    if (!PhysicsTree)
+    {
+        return;
+    }
+
+
+    PhysicsTree->SetVisibility(
+        true
+    );
+
+
+    PhysicsTree->SetCollisionEnabled(
+        ECollisionEnabled::QueryAndPhysics
+    );
+
+
+    PhysicsTree->SetSimulatePhysics(
+        true
+    );
+
+
+    PhysicsTree->SetEnableGravity(
+        true
+    );
+
+
+    PhysicsTree->SetMassOverrideInKg(
+        NAME_None,
+        TreeMass,
+        true
+    );
+
+
+    PhysicsTree->WakeAllRigidBodies();
+}
+
+
+// =============================================================
+// HIDE LIVING TREE
+// =============================================================
+
+void AMedievalPhysicsTree::HideLivingTree()
+{
+    if (TrunkMesh)
+    {
+        TrunkMesh->SetVisibility(
+            false
+        );
+
+        TrunkMesh->SetCollisionEnabled(
+            ECollisionEnabled::NoCollision
+        );
+    }
+
+
+    if (FoliageMesh)
+    {
+        FoliageMesh->SetVisibility(
+            false
+        );
+    }
+}
+
+
+// =============================================================
+// IMPACT DETECTION
+// =============================================================
+
+void AMedievalPhysicsTree::CheckTreeImpact()
+{
+    if (bImpactDetected)
+    {
+        return;
+    }
+
+
+    FVector CurrentLocation =
+        GetActorLocation();
+
+
+    float VerticalMovement =
+        PreviousHeight -
+        CurrentLocation.Z;
+
+
+    PreviousHeight =
+        CurrentLocation.Z;
+
+
+    // The tree has stopped falling
+    if (
+        FMath::Abs(
+            VerticalMovement
+        ) < 0.5f
+    )
+    {
+        FVector Velocity =
+            PhysicsTree
+            ->GetPhysicsLinearVelocity();
+
+
+        if (
+            Velocity.Size() < 20.0f
+        )
+        {
+            bImpactDetected = true;
+
+            State =
+                ETreeState::Fallen;
+
+
+            if (TreeImpactSound)
+            {
+                UGameplayStatics::PlaySoundAtLocation(
+                    this,
+                    TreeImpactSound,
+                    CurrentLocation
+                );
+            }
+        }
+    }
+}
+
+
+// =============================================================
+// RESET
+// =============================================================
+
+void AMedievalPhysicsTree::ResetTree()
+{
+    State =
+        ETreeState::Healthy;
+
+
+    CurrentCutDamage =
+        0.0f;
+
+    CutDepth =
+        0.0f;
+
+    bImpactDetected =
+        false;
+
+
+    PhysicsTree->SetSimulatePhysics(
+        false
+    );
+
+
+    PhysicsTree->SetCollisionEnabled(
+        ECollisionEnabled::NoCollision
+    );
+
+
+    PhysicsTree->SetVisibility(
+        false
+    );
+
+
+    TrunkMesh->SetVisibility(
+        true
+    );
+
+
+    TrunkMesh->SetCollisionEnabled(
+        ECollisionEnabled::QueryAndPhysics
+    );
+
+
+    FoliageMesh->SetVisibility(
+        true
+    );
+}
+
+
+// =============================================================
+// CUT PERCENTAGE
+// =============================================================
+
+float AMedievalPhysicsTree::GetCutPercentage() const
+{
+    if (
+        RequiredCutDamage <= 0.0f
+    )
+    {
+        return 1.0f;
+    }
+
+
+    return FMath::Clamp(
+        CurrentCutDamage /
+        RequiredCutDamage,
+
+        0.0f,
+        1.0f
+    );
+}
+
+
+// =============================================================
+// IS FALLEN
+// =============================================================
+
+bool AMedievalPhysicsTree::IsFallen() const
+{
+    return
+        State ==
+        ETreeState::Fallen;
+}
