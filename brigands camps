@@ -1,0 +1,288 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "BrigandCamp.generated.h"
+
+UENUM(BlueprintType)
+enum class EBrigandWeapon : uint8
+{
+    Club,
+    Spear,
+    RustySword,
+    HuntingBow
+};
+
+USTRUCT(BlueprintType)
+struct FBrigand
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    EBrigandWeapon Weapon = EBrigandWeapon::Club;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    bool bHasShield = false;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    bool bHasArmor = false;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float Health = 100.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float CombatStrength = 1.0f;
+};
+
+UCLASS()
+class YOURGAME_API ABrigandCamp : public AActor
+{
+    GENERATED_BODY()
+
+public:
+
+    ABrigandCamp();
+
+protected:
+
+    virtual void BeginPlay() override;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Brigands")
+    int32 BrigandCount = 18;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Brigands")
+    TArray<FBrigand> Brigands;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Raid")
+    float MinimumRaidInterval = 90.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Raid")
+    float MaximumRaidInterval = 180.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Raid")
+    int32 MinimumRaiders = 4;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Raid")
+    int32 MaximumRaiders = 10;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Raid")
+    float RaidDistance = 2500.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Raid")
+    int32 MaximumFoodStolen = 20;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Raid")
+    int32 MaximumLogsStolen = 10;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Raid")
+    int32 MaximumPlanksStolen = 6;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Raid")
+    int32 MaximumStoneStolen = 8;
+
+    FTimerHandle RaidTimer;
+
+    void CreateBrigands();
+
+    void ScheduleNextRaid();
+
+    void AttemptRaid();
+
+    void PerformRaid();
+
+    void StealResources(int32 RaiderCount);
+
+    void SendRaidersHome(int32 RaiderCount);
+
+    EBrigandWeapon GetRandomPoorWeapon() const;
+};
+BrigandCamp.cpp
+#include "BrigandCamp.h"
+#include "TimerManager.h"
+#include "Kismet/KismetMathLibrary.h"
+
+ABrigandCamp::ABrigandCamp()
+{
+    PrimaryActorTick.bCanEverTick = false;
+
+    BrigandCount = 18;
+}
+
+void ABrigandCamp::BeginPlay()
+{
+    Super::BeginPlay();
+
+    CreateBrigands();
+
+    ScheduleNextRaid();
+}
+
+void ABrigandCamp::CreateBrigands()
+{
+    Brigands.Empty();
+
+    for (int32 i = 0; i < BrigandCount; i++)
+    {
+        FBrigand NewBrigand;
+
+        // Most brigands have extremely basic equipment.
+        NewBrigand.Weapon = GetRandomPoorWeapon();
+
+        // Only some have shields.
+        NewBrigand.bHasShield =
+            FMath::FRand() < 0.30f;
+
+        // Very few have usable armor.
+        NewBrigand.bHasArmor =
+            FMath::FRand() < 0.15f;
+
+        NewBrigand.Health = 100.0f;
+
+        // Poor equipment means low combat effectiveness.
+        NewBrigand.CombatStrength = 0.5f;
+
+        if (NewBrigand.bHasShield)
+        {
+            NewBrigand.CombatStrength += 0.15f;
+        }
+
+        if (NewBrigand.bHasArmor)
+        {
+            NewBrigand.CombatStrength += 0.15f;
+        }
+
+        Brigands.Add(NewBrigand);
+    }
+}
+
+EBrigandWeapon ABrigandCamp::GetRandomPoorWeapon() const
+{
+    const int32 Weapon = FMath::RandRange(0, 3);
+
+    switch (Weapon)
+    {
+        case 0:
+            return EBrigandWeapon::Club;
+
+        case 1:
+            return EBrigandWeapon::Spear;
+
+        case 2:
+            return EBrigandWeapon::RustySword;
+
+        default:
+            return EBrigandWeapon::HuntingBow;
+    }
+}
+
+void ABrigandCamp::ScheduleNextRaid()
+{
+    const float Delay = FMath::FRandRange(
+        MinimumRaidInterval,
+        MaximumRaidInterval
+    );
+
+    GetWorldTimerManager().SetTimer(
+        RaidTimer,
+        this,
+        &ABrigandCamp::AttemptRaid,
+        Delay,
+        false
+    );
+}
+
+void ABrigandCamp::AttemptRaid()
+{
+    PerformRaid();
+
+    ScheduleNextRaid();
+}
+
+void ABrigandCamp::PerformRaid()
+{
+    if (Brigands.Num() == 0)
+    {
+        return;
+    }
+
+    int32 RaiderCount = FMath::RandRange(
+        MinimumRaiders,
+        MaximumRaiders
+    );
+
+    RaiderCount = FMath::Min(
+        RaiderCount,
+        Brigands.Num()
+    );
+
+    UE_LOG(
+        LogTemp,
+        Warning,
+        TEXT("BRIGAND RAID: %d brigands are leaving camp."),
+        RaiderCount
+    );
+
+    StealResources(RaiderCount);
+
+    SendRaidersHome(RaiderCount);
+}
+
+void ABrigandCamp::StealResources(int32 RaiderCount)
+{
+    /*
+     * Replace this section with calls into your settlement
+     * resource manager.
+     *
+     * Example:
+     *
+     * SettlementResources->RemoveFood(FoodStolen);
+     * SettlementResources->RemoveLogs(LogsStolen);
+     */
+
+    const float RaidEffectiveness =
+        FMath::Clamp(
+            RaiderCount / 10.0f,
+            0.25f,
+            1.0f
+        );
+
+    const int32 FoodStolen =
+        FMath::RoundToInt(
+            MaximumFoodStolen * RaidEffectiveness
+        );
+
+    const int32 LogsStolen =
+        FMath::RoundToInt(
+            MaximumLogsStolen * RaidEffectiveness
+        );
+
+    const int32 PlanksStolen =
+        FMath::RoundToInt(
+            MaximumPlanksStolen * RaidEffectiveness
+        );
+
+    const int32 StoneStolen =
+        FMath::RoundToInt(
+            MaximumStoneStolen * RaidEffectiveness
+        );
+
+    UE_LOG(
+        LogTemp,
+        Warning,
+        TEXT("Brigands stole: %d food, %d logs, %d planks and %d uncut stone."),
+        FoodStolen,
+        LogsStolen,
+        PlanksStolen,
+        StoneStolen
+    );
+}
+
+void ABrigandCamp::SendRaidersHome(int32 RaiderCount)
+{
+    UE_LOG(
+        LogTemp,
+        Warning,
+        TEXT("%d brigands have returned to their camp."),
+        RaiderCount
+    );
+}
